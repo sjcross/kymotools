@@ -10,4 +10,4 @@ pip install lumicks.pylake
 ```
 
 ## Example notebooks
-Example notebooks using these tools can be found in the [ctrapnotebooks](https://github.com/sjcross/ctrapnotebooks) repository.
+Example notebooks using these tools can be found in the [ctrapnotebooks](https://github.com/sjcross/ctraptools/tree/main/examplenotebooks) folder.
