@@ -4,9 +4,13 @@ A collection of tools to process images and data from a Lumicks C-Trap optical t
 ## Installation
 To install ctraptools please run the following commands from your terminal.  This will install both ctraptools and [Lumicks' pylake](https://github.com/lumicks/pylake) package.
 
-```Python
+```
 pip install git+https://github.com/sjcross/ctraptools
 pip install lumicks.pylake
+
+Optional (only needed for interactive elements)
+pip install jupyter
+pip install ipympl
 ```
 
 ## Example notebooks
