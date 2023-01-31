@@ -25,11 +25,11 @@ class Track:
         self.step_trace = {}
         self.steps = {}
         
-    def addPeak(self, peak):
+    def add_peak(self, peak):
         self.peaks[peak.t] = peak
         peak.track = self
 
-    def measureIntensity(self, image, half_x_w=0, end_pad=100):
+    def measure_intensity(self, image, half_x_w=0, end_pad=100):
         for t in self.peaks.keys():
             peak = self.peaks.get(t)
             x = round(peak.b)
@@ -41,7 +41,7 @@ class Track:
         for t in range(t_start,t_end):
             self.intensity[t] = image[x-half_x_w:x+half_x_w,t].mean()
             
-    def applyTemporalFilter(self,half_t_w=1):
+    def apply_temporal_filter(self,half_t_w=1):
         filtered = {}
         for t in self.intensity.keys():
             diff = abs(np.array(list(self.intensity.keys()))-t)
@@ -50,7 +50,7 @@ class Track:
         self.intensity = filtered
 
 class Detector():
-    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 10, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2):
+    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2):
         self._half_t_w = half_t_w
         self._peak_det_thresh = peak_det_thresh
         self._max_dist = max_dist
@@ -203,7 +203,7 @@ def _assign_unlinked_tracks(peaks,tracks):
                 max_track_id = max(tracks.keys())
             
             track = Track(max_track_id+1)
-            track.addPeak(peak)
+            track.add_peak(peak)
             tracks[max_track_id + 1] = track
 
 def _calculate_cost_matrix(peaks, tracks, frame, max_dist, max_frame_gap):
@@ -268,7 +268,7 @@ def _apply_tracks(peaks, tracks, costs, peak_ids, track_ids, peak_idx, track_idx
         track = tracks[track_id]
 
         if not costs[peak_idx[i],track_idx[i]] == NO_LINK:
-            track.addPeak(peak)
+            track.add_peak(peak)
 
 def _track_length_filter(tracks, peaks, min_length):
     to_remove_ids = [id for id, track in tracks.items() if len(track.peaks) < min_length]
