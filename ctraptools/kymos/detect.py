@@ -50,7 +50,7 @@ class Track:
         self.intensity = filtered
 
 class Detector():
-    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2):
+    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 10, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2):
         self._half_t_w = half_t_w
         self._peak_det_thresh = peak_det_thresh
         self._max_dist = max_dist
@@ -69,7 +69,7 @@ class Detector():
 
         # for frame in tqdm(range(1000,1100)):
         for frame in tqdm(range(image.shape[1])):
-            frame_peaks = self.fitPeaks(image,frame)
+            frame_peaks = self.fit_peaks(image,frame)
 
             # Determining the maximum peak ID and adding 1
             max_peak_id = 0
@@ -103,7 +103,7 @@ class Detector():
         scores = []
         for n_peaks in range(self._n_max):        
             # Creating initial parameters for fitting
-            (p0,p_lb,p_ub,proceed) = self._initialiseGuesses(x,vals,n_peaks)
+            (p0,p_lb,p_ub,proceed) = self._initialise_guesses(x,vals,n_peaks)
 
             try:
                 res = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))[0]

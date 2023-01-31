@@ -1,4 +1,4 @@
-from ctraptools.kymos.detect import gauss_1D
+from ctraptools.kymos.detect import gauss_1D, get_raw_profile
 from lumicks import pylake
 from matplotlib.colors import hsv_to_rgb
 
@@ -134,7 +134,7 @@ def save_plots(tracks, filepath):
 def plot_gauss_for_frame(peaks, frame, image):
     plt.figure(figsize=(14,8))
 
-    x, vals = kio.get_raw_profile(image,frame,3)
+    x, vals = get_raw_profile(image,frame,3)
     plt.plot(x,vals,color="black",linewidth=4)
 
     for peak in peaks.values():
