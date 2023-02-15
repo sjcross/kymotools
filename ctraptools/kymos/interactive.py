@@ -63,12 +63,13 @@ class DisplayRangeSelector:
         return (self._px_min, self._px_max)
 
 class TraceAnalyser:
-    def __init__(self, kymo, time_ns, data, y_label = "Force (pN)", px_min=0, px_max=255):
+    def __init__(self, kymo, time_ns, data, y_label = "Force (pN)", px_min=0, px_max=255, hist_n_bins=150):
         self._time_s = (time_ns - time_ns[0])/1000000000
         self._data = data
         self._y_label = y_label
         self._px_min = px_min
         self._px_max = px_max
+        self._hist_n_bins = hist_n_bins
 
         self._fig = None
         self._crop_plot_ax = None
@@ -128,15 +129,6 @@ class TraceAnalyser:
         self._crop_plot_ax.plot(self._time_s, self._data, label='Raw data', color='black', alpha=.3)
         self._filt_crop_plot, = self._crop_plot_ax.plot([], [], label='Filtered data')
 
-        # Histogram of values in cropped trace
-        self._hist_ax.set_xlabel("Counts")
-        self._hist_ax.set_title('Frequencies (raw force)', fontsize=8)
-        self._hist_ax.get_shared_y_axes().join(self._crop_plot_ax, self._hist_ax)
-        self._hist_ax.set_yticklabels([])
-        self._hist_ax.minorticks_on()
-        self._hist_ax.yaxis.set_tick_params(which='minor', bottom=False)
-        self._hist, = self._hist_ax.plot([], [], color='black')
-
         # adjust the main plot to make room for the sliders
         self._fig.subplots_adjust(left=0.25, bottom=0.32)
 
@@ -173,8 +165,7 @@ class TraceAnalyser:
         sos = butter(self._order_slider.val, self._freq_slider.val, 'lp', output='sos')
         filtered_data =  sosfiltfilt(sos, curr_data)
         
-        counts, bins = np.histogram(curr_data, bins=150)
-        bin_mids = (bins[1:] + bins[:-1])/2
+        counts, bins = np.histogram(curr_data, bins=self._hist_n_bins)
         
         region_min = self._data.min()
         region_max = self._data.max()
@@ -185,7 +176,14 @@ class TraceAnalyser:
             self._crop_plot_ax.set_ylim(region_min - (region_range*0.05), region_max + (region_range*0.05))
             self._crop_plot_ax.legend(fontsize=9)
             self._filt_crop_plot.set_data(curr_time_s, filtered_data)
-                        
-            self._hist_ax.set_xlim(0, counts.max())
-            self._hist.set_data(counts, bin_mids)
+            
+            self._hist_ax.cla()
+            self._hist_ax.hist(bins[:-1], bins, weights=counts, orientation="horizontal")
+            self._hist_ax.set_xlabel("Counts")
+            self._hist_ax.set_title('Frequencies (raw force)', fontsize=8)
+            self._hist_ax.get_shared_y_axes().join(self._crop_plot_ax, self._hist_ax)
+            self._hist_ax.set_yticklabels([])
+            self._hist_ax.minorticks_on()
+            self._hist_ax.yaxis.set_tick_params(which='minor', bottom=False)
+
             self._fig.canvas.draw_idle()
