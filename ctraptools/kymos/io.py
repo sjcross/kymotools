@@ -1,11 +1,13 @@
 from ctraptools.kymos.detect import gauss_1D, get_raw_profile
 from lumicks import pylake
 from matplotlib.colors import hsv_to_rgb
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 import csv
 import ctraptools.fileutils as fu
 import ctraptools.imageutils as iu
-import ctraptools.kymos.io as kio
 import imageio as io
 import math
 import matplotlib.pyplot as plt
@@ -96,30 +98,37 @@ def write_traces(tracks, filepath):
                 writer.writerow(row)
 
 def save_overlay(tracks, image, filepath):
-    fig = plt.figure()
+    # Making 3 channels
+    image *= (255.0/image.max())
+    image = np.expand_dims(image,axis=2)
+    image_in = image
+    image = np.append(image,image_in,axis=2)
+    image = np.append(image,image_in,axis=2)
     
-    plt.imshow(image)
-    plt.set_cmap('gray')
-
     for track in tracks.values():
         # Setting colour to this track with some transparency
         random.seed(track.ID)
-        colour = hsv_to_rgb([random.random(),1,1])    
-        colour_line = np.append(colour,[0.05])       
+        colour = hsv_to_rgb([random.random(),1,1])   
 
-        # Drawing each point
+        # Drawing detected line
         for peak in track.peaks.values():
-            plt.plot(peak.t,peak.b,'.',color=colour_line)
+            image[math.floor(peak.b),math.floor(peak.t),0] = colour[0]*255
+            image[math.floor(peak.b),math.floor(peak.t),1] = colour[1]*255
+            image[math.floor(peak.b),math.floor(peak.t),2] = colour[2]*255
+    
+    img = Image.fromarray(image.astype(np.uint8))
+    I1 = ImageDraw.Draw(img)
+    myFont = ImageFont.truetype("arial.ttf", 16)
+    
+    for track in tracks.values():
+        random.seed(track.ID)
+        colour = hsv_to_rgb([random.random(),1,1])   
 
         # Adding a label to the centre of each line       
         cent = list(track.peaks.values())[math.floor(len(track.peaks)/2)]
-        plt.text(cent.t,cent.b,str(track.ID),fontsize=24,color=colour,horizontalalignment='center',verticalalignment='center')
+        I1.text((cent.t,cent.b), str(track.ID), font=myFont, fill = ((colour[0]*255).astype(np.uint8),(colour[1]*255).astype(np.uint8),(colour[2]*255).astype(np.uint8)))
 
-    ax = fig.get_axes()[0]
-    ax.set_axis_off()
-    fig.set_size_inches(image.shape[1]/50,image.shape[0]/50)
-
-    plt.savefig(filepath+".png",bbox_inches=0)
+    img.save(filepath+"_IDs.png")
 
 def save_plots(tracks, filepath):
     for track in tracks.values():
@@ -131,10 +140,10 @@ def save_plots(tracks, filepath):
 
         plt.savefig(filepath+"_ID"+str(track.ID)+".png")
 
-def plot_gauss_for_frame(peaks, frame, image):
+def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
     plt.figure(figsize=(14,8))
 
-    x, vals = get_raw_profile(image,frame,3)
+    x, vals = get_raw_profile(image,frame,half_t_w)
     plt.plot(x,vals,color="black",linewidth=4)
 
     for peak in peaks.values():

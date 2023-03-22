@@ -50,19 +50,20 @@ class Track:
         self.intensity = filtered
 
 class Detector():
-    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2):
+    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, ignore_missing_at_start=False):
         self._half_t_w = half_t_w
         self._peak_det_thresh = peak_det_thresh
         self._max_dist = max_dist
         self._max_frame_gap = max_frame_gap
         self._min_track_length = min_track_length
+        self._track_heritage_weight = track_heritage_weight
         self._n_max = n_max
         self._a_lb = a_lb
         self._a_ub = a_ub
         self._c_lb = c_lb
         self._c_ub = c_ub
         self._c_def = c_def
-
+        self._ignore_missing_at_start = ignore_missing_at_start
     def detect(self,image):
         peaks = {}
         tracks = {}
@@ -84,13 +85,15 @@ class Detector():
                 peak_id = peak_id + 1
 
             # Tracking
-            (costs,peak_ids,track_ids) = _calculate_cost_matrix(peaks,tracks,frame, self._max_dist, self._max_frame_gap)
+            (costs,peak_ids,track_ids) = _calculate_cost_matrix(peaks,tracks,frame, self._max_dist, self._max_frame_gap, self._track_heritage_weight)
             peak_idx,track_idx = linear_sum_assignment(costs)
             _apply_tracks(peaks,tracks,costs,peak_ids,track_ids,peak_idx,track_idx)
             _assign_unlinked_tracks(peaks,tracks)
 
         _track_length_filter(tracks,peaks,self._min_track_length)
-        _ignore_missing_at_start(tracks,peaks)
+        
+        if self._ignore_missing_at_start:
+            _ignore_missing_at_start(tracks,peaks)
 
         return tracks
 
@@ -206,7 +209,7 @@ def _assign_unlinked_tracks(peaks,tracks):
             track.add_peak(peak)
             tracks[max_track_id + 1] = track
 
-def _calculate_cost_matrix(peaks, tracks, frame, max_dist, max_frame_gap):
+def _calculate_cost_matrix(peaks, tracks, frame, max_dist, max_frame_gap, track_heritage_weight):
     peak_ids = []
     track_ids = []
 
@@ -244,7 +247,7 @@ def _calculate_cost_matrix(peaks, tracks, frame, max_dist, max_frame_gap):
             prev_peak = track.peaks[max(track.peaks.keys())]
 
             dist = abs(prev_peak.b-peak.b)
-            heritage = 5*(math.exp((frame-len(track.peaks))/frame)-1)
+            heritage = track_heritage_weight*(math.exp((frame-len(track.peaks))/frame)-1)
             # heritage = 100*max(0,max_frame_gap-len(track.peaks))/min(frame,max_frame_gap)
             height_diff = abs(prev_peak.a-peak.a)
             height_diff = 0
