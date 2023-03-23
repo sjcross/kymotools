@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='ctraptools',
       version='0.2.0',
@@ -6,5 +6,6 @@ setup(name='ctraptools',
       url='http://github.com/sjcross/ctraptools',
       author='Stephen Cross',
       license='GPL v3',
-      packages=['ctraptools','ctraptools.kymos','ctraptools.acquire']
+      packages=find_packages(),
+      include_package_data=True
 )

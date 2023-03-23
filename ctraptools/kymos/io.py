@@ -13,6 +13,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pkg_resources
 import random
 import tifffile
 
@@ -118,8 +119,8 @@ def save_overlay(tracks, image, filepath):
     
     img = Image.fromarray(image.astype(np.uint8))
     I1 = ImageDraw.Draw(img)
-    myFont = ImageFont.truetype("arial.ttf", 16)
-    
+    myFont = ImageFont.truetype(pkg_resources.resource_filename('ctraptools','resources/fonts/Roboto-Regular.ttf'), 16)
+            
     for track in tracks.values():
         random.seed(track.ID)
         colour = hsv_to_rgb([random.random(),1,1])   
