@@ -9,12 +9,12 @@ NO_LINK = 100000000
 
 class Peak:
     def __init__(self, ID, t, a, b, c):
-        self.ID = ID
-        self.t = t
-        self.a = a
-        self.b = b
-        self.c = c
-        self.track = None
+        self.ID = ID    # ID number
+        self.t = t      # Timepoint
+        self.a = a      # Amplitude
+        self.b = b      # X-position
+        self.c = c      # Sigma
+        self.track = None # Assigned track
 
 class Track:
     def __init__(self, ID):
@@ -64,11 +64,11 @@ class Detector():
         self._c_ub = c_ub
         self._c_def = c_def
         self._ignore_missing_at_start = ignore_missing_at_start
+        
     def detect(self,image):
         peaks = {}
         tracks = {}
 
-        # for frame in tqdm(range(1000,1100)):
         for frame in tqdm(range(image.shape[1])):
             frame_peaks = self.fit_peaks(image,frame)
 
