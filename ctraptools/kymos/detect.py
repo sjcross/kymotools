@@ -50,12 +50,13 @@ class Track:
         self.intensity = filtered
 
 class Detector():
-    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, ignore_missing_at_start=False):
+    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, min_track_density=0, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, ignore_missing_at_start=False):
         self._half_t_w = half_t_w
         self._peak_det_thresh = peak_det_thresh
         self._max_dist = max_dist
         self._max_frame_gap = max_frame_gap
         self._min_track_length = min_track_length
+        self._min_track_density = min_track_density
         self._track_heritage_weight = track_heritage_weight
         self._n_max = n_max
         self._a_lb = a_lb
@@ -91,6 +92,7 @@ class Detector():
             _assign_unlinked_tracks(peaks,tracks)
 
         _track_length_filter(tracks,peaks,self._min_track_length)
+        _track_density_filter(tracks,peaks,self._min_track_density)
         
         if self._ignore_missing_at_start:
             _ignore_missing_at_start(tracks,peaks)
@@ -275,6 +277,17 @@ def _apply_tracks(peaks, tracks, costs, peak_ids, track_ids, peak_idx, track_idx
 
 def _track_length_filter(tracks, peaks, min_length):
     to_remove_ids = [id for id, track in tracks.items() if len(track.peaks) < min_length]
+    for to_remove_id in to_remove_ids:
+        track = tracks[to_remove_id]
+        # Removing peaks assigned to this track
+        for peak in track.peaks.values():
+            del peaks[peak.ID]
+
+        # Removing this track
+        del tracks[to_remove_id]    
+
+def _track_density_filter(tracks, peaks, min_density):
+    to_remove_ids = [id for id, track in tracks.items() if (len(track.peaks)/(max(track.peaks.keys())-min(track.peaks.keys())+1)) < min_density]
     for to_remove_id in to_remove_ids:
         track = tracks[to_remove_id]
         # Removing peaks assigned to this track
