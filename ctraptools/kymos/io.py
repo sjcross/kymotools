@@ -6,8 +6,8 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 import csv
-import ctraptools.fileutils as fu
-import ctraptools.imageutils as iu
+import ctraptools.utils.fileutils as fu
+import ctraptools.utils.imageutils as iu
 import imageio as io
 import math
 import matplotlib.pyplot as plt

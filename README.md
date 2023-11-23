@@ -7,6 +7,7 @@ To install ctraptools please run the following commands from your terminal.  Thi
 ```
 pip install git+https://github.com/sjcross/ctraptools
 pip install lumicks.pylake
+pip install pandas
 
 Optional (only needed for interactive elements)
 pip install jupyter
