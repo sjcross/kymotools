@@ -2,6 +2,8 @@ from cmath import sqrt
 from lumicks import pylake
 from scipy.optimize import curve_fit
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 import scipy
@@ -23,7 +25,7 @@ class Trace:
 
         sub_data = self.data[idx_start:idx_end]
 
-        return Trace(time=sub_data[TIME],force=sub_data[FORCE],distance=sub_data[DIST])
+        return Trace(time=sub_data[TIME].values,force=sub_data[FORCE].values,distance=sub_data[DIST].values)
 
     def estimate_contour_length(self,T,P):
         a = scipy.constants.k*T/P
@@ -38,16 +40,18 @@ class Trace:
         return Lc
     
     def find_force_event(self):
-        x = self.data[TIME]
-        vals = self.data[FORCE]
-
-        # try:
-        #     res = curve_fit(__getSaw__, x, vals, p0, bounds=(p_lb, p_ub))[0]
-        #     g = multi_gauss_1D(x,*res)
-        #     temp_peaks.append(res)
-        #     scores.append(sum(abs(vals-g)))
-        # except:
-        #     return
+        x = self.data[TIME].values
+        vals = self.data[FORCE].values
+        
+        try:
+            x_max = np.where(vals==max(vals))[0][0]
+            p0 = (0.001,len(x)*0.25,x_max,min(vals))
+            
+            return curve_fit(__getSaw__, x, vals,p0)[0]
+            
+        except Exception as e:
+            print(e)
+            return None
     
     def get_time(self):
         return self.data[TIME]
@@ -57,29 +61,43 @@ class Trace:
     
     def get_distance(self):
         return self.data[DIST]
-    
-def __getSaw__(n,x_start,x_peak,x_end,amplitude,baseline_a,baseline_b,baseline_c):
-    # Generating baseline
-    polynomial = np.polynomial.Polynomial(coef=(baseline_a,baseline_b,baseline_c),domain=(0,n-1),window=(0,n-1))
-    saw = polynomial.linspace(n)
 
-    # Adding saw peak
-    m_asc = amplitude/(x_peak-x_start)
-    for i in range(x_start,x_peak):
-        saw[1][i] = saw[1][i] + (i-x_start)*m_asc
+def __getSaw__(x,a,x_min,x_max,y_min):
+    n = len(x)
+    curve = np.zeros(n)
 
-    m_dsc = amplitude/(x_end-x_peak)
-    for i in range(x_peak,x_end):
-        saw[1][i] = saw[1][i] + (x_end-i)*m_dsc
-        
-    return saw
+    for i in range(0,n):
+        if i < x_min:
+            curve[i] = y_min
+        elif i >= x_min and i < x_max:
+            curve[i] = a*(i-x_min)*(i-x_min)+y_min
+        else:
+            curve[i] = y_min
+
+    return curve
 
 fpath = "/Users/sc13967/Documents/People/Alex Hughes-Games/20230120-135230 Kymograph 4 H119A trans, F.h5"
 h5_file = pylake.File(fpath)
 
 time_ns = h5_file['Force LF']['Trap 2'].timestamps
 time_s = (time_ns - time_ns[0])*1E-9
-force_N = h5_file['Force LF']['Trap 2'].data*1E-12
+force_pN = h5_file['Force LF']['Trap 2'].data
 dist_m = h5_file['Distance']['Distance 1'].data*1E-6
 
-trace = Trace(time=time_s,force=force_N,distance=dist_m)
+trace = Trace(time=time_s,force=force_pN,distance=dist_m)
+trace_window = trace.extract_time_window(time_start=40,time_end=60)
+res = trace_window.find_force_event()
+
+f_a = res[0]
+f_x_min= res[1]
+f_x_max = res[2]
+f_y_min = res[3]
+
+g = __getSaw__(trace_window.get_time(),f_a,f_x_min,f_x_max,f_y_min)
+
+vals = trace_window.get_force()
+plt.plot(vals)
+plt.plot(g)
+plt.show()
+
+
