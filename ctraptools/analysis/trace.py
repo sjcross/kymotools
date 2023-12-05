@@ -41,7 +41,7 @@ class Trace:
     
     def find_force_event(self):
         x = self.data[TIME].values
-        vals = self.data[FORCE].values
+        vals = self.data[FORCE].values*1E12
         
         try:
             x_max = np.where(vals==max(vals))[0][0]
@@ -76,28 +76,28 @@ def __getSaw__(x,a,x_min,x_max,y_min):
 
     return curve
 
-fpath = "/Users/sc13967/Documents/People/Alex Hughes-Games/20230120-135230 Kymograph 4 H119A trans, F.h5"
-h5_file = pylake.File(fpath)
+# fpath = "/Users/sc13967/Documents/People/Alex Hughes-Games/20230120-135230 Kymograph 4 H119A trans, F.h5"
+# h5_file = pylake.File(fpath)
 
-time_ns = h5_file['Force LF']['Trap 2'].timestamps
-time_s = (time_ns - time_ns[0])*1E-9
-force_pN = h5_file['Force LF']['Trap 2'].data
-dist_m = h5_file['Distance']['Distance 1'].data*1E-6
+# time_ns = h5_file['Force LF']['Trap 2'].timestamps
+# time_s = (time_ns - time_ns[0])*1E-9
+# force_pN = h5_file['Force LF']['Trap 2'].data
+# dist_m = h5_file['Distance']['Distance 1'].data*1E-6
 
-trace = Trace(time=time_s,force=force_pN,distance=dist_m)
-trace_window = trace.extract_time_window(time_start=40,time_end=60)
-res = trace_window.find_force_event()
+# trace = Trace(time=time_s,force=force_pN,distance=dist_m)
+# trace_window = trace.extract_time_window(time_start=40,time_end=60)
+# res = trace_window.find_force_event()
 
-f_a = res[0]
-f_x_min= res[1]
-f_x_max = res[2]
-f_y_min = res[3]
+# f_a = res[0]
+# f_x_min= res[1]
+# f_x_max = res[2]
+# f_y_min = res[3]
 
-g = __getSaw__(trace_window.get_time(),f_a,f_x_min,f_x_max,f_y_min)
+# g = __getSaw__(trace_window.get_time(),f_a,f_x_min,f_x_max,f_y_min)
 
-vals = trace_window.get_force()
-plt.plot(vals)
-plt.plot(g)
-plt.show()
+# vals = trace_window.get_force()
+# plt.plot(vals)
+# plt.plot(g)
+# plt.show()
 
 
