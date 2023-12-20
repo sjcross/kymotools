@@ -49,6 +49,19 @@ class Track:
 
         self.intensity = filtered
 
+    def get_timepoints(self):
+        return [peak.t for peak in self.peaks.values()]
+    
+    def get_amplitudes(self):
+        return [peak.a for peak in self.peaks.values()]
+
+    def get_positions(self):
+        return [peak.b for peak in self.peaks.values()]
+    
+    def get_sigmas(self):
+        return [peak.c for peak in self.peaks.values()]
+
+
 class Detector():
     def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, min_track_density=0, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, ignore_missing_at_start=False):
         self._half_t_w = half_t_w
@@ -173,8 +186,12 @@ class Detector():
         return (p0,p_lb,p_ub,proceed)
 
 def get_raw_profile(image, frame, half_t_w):
-    widevals = image[:, max(0,frame-half_t_w):min(frame+half_t_w,image.shape[1]-1)]
-    vals = np.median(widevals, 1)
+    if half_t_w < 1:
+        vals = image[:,frame]
+    else:
+        widevals = image[:, max(0,frame-half_t_w):min(frame+half_t_w,image.shape[1]-1)]
+        vals = np.median(widevals, 1)
+        
     x = np.arange(len(vals))
 
     return (x,vals)

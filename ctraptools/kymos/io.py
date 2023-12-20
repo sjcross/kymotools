@@ -83,7 +83,24 @@ def write_change_points(tracks, filepath):
                 row.append(step)
             writer.writerow(row)
 
-def write_traces(tracks, filepath):
+def write_peak_traces(tracks, filepath):
+    for track in tracks.values():
+        with open(filepath+"_ID"+str(track.ID)+".csv", 'w', newline='') as file:
+            writer = csv.writer(file)
+
+            # Adding header row
+            writer.writerow(['Timepoint','Amplitude','X-position','Sigma'])
+
+            for peak in track.peaks.values():
+                row = []
+                row.append(peak.t)
+                row.append(peak.a)
+                row.append(peak.b)
+                row.append(peak.c)
+                
+                writer.writerow(row)
+
+def write_intensity_traces(tracks, filepath):
     for track in tracks.values():
         with open(filepath+"_ID"+str(track.ID)+".csv", 'w', newline='') as file:
             writer = csv.writer(file)
