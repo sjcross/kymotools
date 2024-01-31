@@ -1,53 +1,13 @@
 from scipy.optimize import curve_fit
 from scipy.optimize import linear_sum_assignment
+from ctraptools.kymos.kymo import Peak
+from ctraptools.kymos.kymo import Track
 from tqdm import tqdm
 
 import math
 import numpy as np
 
 NO_LINK = 100000000
-
-class Peak:
-    def __init__(self, ID, t, a, b, c):
-        self.ID = ID    # ID number
-        self.t = t      # Timepoint
-        self.a = a      # Amplitude
-        self.b = b      # X-position
-        self.c = c      # Sigma
-        self.track = None # Assigned track
-
-class Track:
-    def __init__(self, ID):
-        self.ID = ID
-        self.peaks = {}
-        self.intensity = {}
-        self.filtered = {}
-        self.step_trace = {}
-        self.steps = {}
-        
-    def add_peak(self, peak):
-        self.peaks[peak.t] = peak
-        peak.track = self
-
-    def measure_intensity(self, image, half_x_w=0, end_pad=100):
-        for t in self.peaks.keys():
-            peak = self.peaks.get(t)
-            x = round(peak.b)
-            self.intensity[t] = peak.a
-
-        # Adding measurement points to the end
-        t_start = max(max(self.peaks.keys())+1, 0)
-        t_end = min(max(self.peaks.keys())+end_pad, image.shape[1])
-        for t in range(t_start,t_end):
-            self.intensity[t] = image[x-half_x_w:x+half_x_w,t].mean()
-            
-    def apply_temporal_filter(self,half_t_w=1):
-        filtered = {}
-        for t in self.intensity.keys():
-            diff = abs(np.array(list(self.intensity.keys()))-t)
-            filtered[t] = np.median(np.array(list(self.intensity.values()))[np.where(diff<=half_t_w)])
-
-        self.intensity = filtered
 
 class Detector():
     def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, min_track_density=0, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, ignore_missing_at_start=False):
@@ -173,8 +133,12 @@ class Detector():
         return (p0,p_lb,p_ub,proceed)
 
 def get_raw_profile(image, frame, half_t_w):
-    widevals = image[:, max(0,frame-half_t_w):min(frame+half_t_w,image.shape[1]-1)]
-    vals = np.median(widevals, 1)
+    if half_t_w < 1:
+        vals = image[:,frame]
+    else:
+        widevals = image[:, max(0,frame-half_t_w):min(frame+half_t_w,image.shape[1]-1)]
+        vals = np.median(widevals, 1)
+        
     x = np.arange(len(vals))
 
     return (x,vals)

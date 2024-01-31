@@ -1,3 +1,4 @@
+import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,6 +63,47 @@ class DisplayRangeSelector:
     def get_range(self):
         return (self._px_min, self._px_max)
 
+class FrameRangeSelector:
+    def __init__(self, kymo, px_min=0, px_max=255):
+        self._abs_range_min = 0
+        self._abs_range_max = kymo.get_image(channel='red').shape[1]-1 # Maximum number of frames minus 1
+        self._range_min = self._abs_range_min
+        self._range_max = self._abs_range_max
+        self._px_min = px_min # Intensity range min
+        self._px_max = px_max # Intensity range max
+        self._min_slider = None # Sliders have to be retained to keep them active
+        self._max_slider = None
+        self._plot = None
+        
+        self._create_plot(kymo)
+                        
+    def _create_plot(self, kymo):
+        def on_span_select(range_min, range_max):
+            self._range_min = max(self._abs_range_min,math.floor(range_min))
+            self._range_max = min(self._abs_range_max,math.ceil(range_max))
+        
+        fig = plt.figure()
+        ax = fig.gca()
+        
+        raw_kymo = kymo.get_image(channel='red')
+        self._plot = ax.imshow(raw_kymo, aspect=3, cmap='viridis', norm=mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
+        plt.tight_layout()
+        ax.set_xlabel('Time (s)', fontsize=12)
+        ax.set_ylabel('Distance ($\mu$m)', fontsize=12)
+
+        self._span_selector_trace = SpanSelector(
+            ax,
+            on_span_select,
+            "horizontal",
+            useblit=True,
+            props=dict(alpha=0.5, facecolor="tab:blue"),
+            interactive=True,
+            drag_from_anywhere=True
+        )
+                
+    def get_range(self):
+        return (self._range_min, self._range_max)
+    
 class TraceAnalyser:
     def __init__(self, kymo, time_ns, data, y_label = "Force (pN)", px_min=0, px_max=255, hist_n_bins=150):
         self._time_s = (time_ns - time_ns[0])/1000000000
@@ -109,7 +151,7 @@ class TraceAnalyser:
         # Full length trace
         ax3.plot(self._time_s, self._data, color='black')
         ax3.set_ylabel(self._y_label)
-        ax3.get_shared_x_axes().join(ax1, ax3)
+        ax3.sharex(ax1)
         ax3.set_xticklabels([])
         self._span_selector_trace = SpanSelector(
             ax3,
@@ -181,7 +223,7 @@ class TraceAnalyser:
             self._hist_ax.hist(bins[:-1], bins, weights=counts, orientation="horizontal")
             self._hist_ax.set_xlabel("Counts")
             self._hist_ax.set_title('Frequencies (raw force)', fontsize=8)
-            self._hist_ax.get_shared_y_axes().join(self._crop_plot_ax, self._hist_ax)
+            self._hist_ax.sharey(self._crop_plot_ax)
             self._hist_ax.set_yticklabels([])
             self._hist_ax.minorticks_on()
             self._hist_ax.yaxis.set_tick_params(which='minor', bottom=False)
