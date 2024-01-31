@@ -10,7 +10,7 @@ import numpy as np
 NO_LINK = 100000000
 
 class Detector():
-    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, min_track_density=0, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, starting_windw=None):
+    def __init__(self,half_t_w = 2, peak_det_thresh = 3.5, max_dist = 6, max_frame_gap = 10, min_track_length = 50, min_track_density=0, track_heritage_weight=100, n_max = 8, a_lb = 0, a_ub = 10000, c_lb = 1.2, c_ub = 3, c_def = 2, starting_window=None):
         self._half_t_w = half_t_w
         self._peak_det_thresh = peak_det_thresh
         self._max_dist = max_dist
@@ -24,7 +24,7 @@ class Detector():
         self._c_lb = c_lb
         self._c_ub = c_ub
         self._c_def = c_def
-        self._starting_window = starting_windw
+        self._starting_window = starting_window
         
     def detect(self,image):
         peaks = {}
