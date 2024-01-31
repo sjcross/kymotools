@@ -61,8 +61,13 @@ def batch_save_kymos(input_path, output_path, output_range=None, verbose=False):
 def read_image(path,channel,x_range=None):
     image = io.imread(path)
     if len(image.shape) == 3:
-        image = image[channel,:,:]
-    
+        if image.shape[2] == 3:
+            image = image[:,:,channel]
+        elif image.shape[1] == 3:
+            image = image[:,channel,:]
+        else:
+            image = image[channel,:,:]
+
     if x_range is not None:
         image = image[:,x_range[0]:x_range[1]]
 

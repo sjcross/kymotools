@@ -47,7 +47,7 @@ class Trace:
             x_max = np.where(vals==max(vals))[0][0]
             p0 = (0.001,len(x)*0.25,x_max,min(vals))
             
-            return curve_fit(__getSaw__, x, vals,p0)[0]
+            return curve_fit(__get_saw__, x, vals,p0)[0]
             
         except Exception as e:
             print(e)
@@ -62,7 +62,7 @@ class Trace:
     def get_distance(self):
         return self.data[DIST]
 
-def __getSaw__(x,a,x_min,x_max,y_min):
+def __get_saw__(x,a,x_min,x_max,y_min):
     n = len(x)
     curve = np.zeros(n)
 
