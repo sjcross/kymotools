@@ -122,6 +122,7 @@ def write_intensity_traces(tracks, filepath):
 
 def save_overlay(tracks, image, filepath):
     # Making 3 channels
+    image = np.copy(image)
     image *= (255.0/image.max())
     image = np.expand_dims(image,axis=2)
     image_in = image
