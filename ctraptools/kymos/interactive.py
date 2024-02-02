@@ -6,8 +6,13 @@ import numpy as np
 from matplotlib.widgets import Slider, SpanSelector
 from scipy.signal import butter, sosfiltfilt
 
-class DisplayRangeSelector:
-    def __init__(self, kymo, px_min=0, px_max=255):
+class KymoSelector:
+    def __init__(self, kymo, px_min=0, px_max=255,channel=None):
+        self._channel = channel
+        self._abs_range_min = 0
+        self._abs_range_max = kymo.get_image(channel='red').shape[1]-1 # Maximum number of frames minus 1
+        self._range_min = self._abs_range_min
+        self._range_max = self._abs_range_max
         self._px_min = px_min
         self._px_max = px_max
         self._min_slider = None # Sliders have to be retained to keep them active
@@ -15,8 +20,12 @@ class DisplayRangeSelector:
         self._plot = None
         
         self._create_plot(kymo)
-                        
+
     def _create_plot(self, kymo):
+        def on_span_select(range_min, range_max):
+            self._range_min = max(self._abs_range_min,math.floor(range_min))
+            self._range_max = min(self._abs_range_max,math.ceil(range_max))
+
         def update_min_intensity(val):
             self._px_min = val
             self._update_plot()
@@ -28,13 +37,25 @@ class DisplayRangeSelector:
         fig, ax1 = plt.subplots(1, figsize=(8,5))
         fig.subplots_adjust(left=0.25, bottom=0.35)
         
-        kymo_line_length = kymo.size_um[0]
-        raw_kymo = kymo.get_image(channel='red')
-        t_stop = (kymo.stop-kymo.start)*1E-9
-        self._plot = ax1.imshow(raw_kymo, aspect=3, cmap='viridis', extent=[0, t_stop, 0, kymo_line_length], norm=mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
-        ax1.set_xlabel('Time (s)', fontsize=12)
+        if self._channel is None:
+            raw_kymo = kymo.get_image()
+        else:
+            raw_kymo = kymo.get_image(channel=self._channel)
+            
+        self._plot = ax1.imshow(raw_kymo, aspect=3, cmap='viridis', norm=mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
+        ax1.set_xlabel('Frame', fontsize=12)
         ax1.set_ylabel('Distance ($\mu$m)', fontsize=12)
         
+        self._span_selector_trace = SpanSelector(
+            ax1,
+            on_span_select,
+            "horizontal",
+            useblit=True,
+            props=dict(alpha=0.5, facecolor="tab:blue"),
+            interactive=True,
+            drag_from_anywhere=True
+        )
+
         ax_min_int = fig.add_axes([0.25, 0.2, 0.65, 0.03])
         self._min_slider = Slider(
             ax=ax_min_int,
@@ -60,48 +81,10 @@ class DisplayRangeSelector:
     def _update_plot(self):
         self._plot.set_norm(mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
         
-    def get_range(self):
+    def get_display_range(self):
         return (self._px_min, self._px_max)
-
-class FrameRangeSelector:
-    def __init__(self, kymo, px_min=0, px_max=255):
-        self._abs_range_min = 0
-        self._abs_range_max = kymo.get_image(channel='red').shape[1]-1 # Maximum number of frames minus 1
-        self._range_min = self._abs_range_min
-        self._range_max = self._abs_range_max
-        self._px_min = px_min # Intensity range min
-        self._px_max = px_max # Intensity range max
-        self._min_slider = None # Sliders have to be retained to keep them active
-        self._max_slider = None
-        self._plot = None
-        
-        self._create_plot(kymo)
-                        
-    def _create_plot(self, kymo):
-        def on_span_select(range_min, range_max):
-            self._range_min = max(self._abs_range_min,math.floor(range_min))
-            self._range_max = min(self._abs_range_max,math.ceil(range_max))
-        
-        fig = plt.figure()
-        ax = fig.gca()
-        
-        raw_kymo = kymo.get_image(channel='red')
-        self._plot = ax.imshow(raw_kymo, aspect=3, cmap='viridis', norm=mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
-        plt.tight_layout()
-        ax.set_xlabel('Time (s)', fontsize=12)
-        ax.set_ylabel('Distance ($\mu$m)', fontsize=12)
-
-        self._span_selector_trace = SpanSelector(
-            ax,
-            on_span_select,
-            "horizontal",
-            useblit=True,
-            props=dict(alpha=0.5, facecolor="tab:blue"),
-            interactive=True,
-            drag_from_anywhere=True
-        )
-                
-    def get_range(self):
+    
+    def get_frame_range(self):
         return (self._range_min, self._range_max)
     
 class TraceAnalyser:

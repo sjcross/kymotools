@@ -72,7 +72,8 @@ class Track:
                 position_separation = abs(curr_position-prev_position)
 
                 if position_separation < link_dist:
-                    counts[round(curr_position),timepoint_separation] = counts[round(curr_position),timepoint_separation] + 1
+                    pos_to_use = min(kymo_size[0]-1,max(0,round(curr_position)))
+                    counts[pos_to_use,timepoint_separation] = counts[pos_to_use,timepoint_separation] + 1
                 else:
                     # Once the peak has moved out of the linking range, stop recording history
                     break

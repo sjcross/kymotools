@@ -96,7 +96,26 @@ class Detector():
             peak = Peak(peak_id, frame, best_peaks[i], best_peaks[i+1], best_peaks[i+2])
             frame_peaks[peak_id] = peak   
 
-        return frame_peaks       
+        return frame_peaks      
+
+    def get_parameters(self): 
+        params = {}
+        params['half_t_w'] = self._half_t_w
+        params['peak_det_thresh'] = self._peak_det_thresh
+        params['max_dist'] = self._max_dist
+        params['max_frame_gap'] = self._max_frame_gap
+        params['min_track_length'] = self._min_track_length
+        params['min_track_density'] = self._min_track_density
+        params['track_heritage_weight'] = self._track_heritage_weight
+        params['n_max'] = self._n_max
+        params['a_lb'] = self._a_lb
+        params['a_ub'] = self._a_ub
+        params['c_lb'] = self._c_lb
+        params['c_ub'] = self._c_ub
+        params['c_def'] = self._c_def
+        params['starting_window'] = self._starting_window
+
+        return params
 
     def _initialise_guesses(self,x,vals,n_peaks):
         proceed = True
@@ -131,6 +150,7 @@ class Detector():
             p_ub.append(self._c_ub)
 
         return (p0,p_lb,p_ub,proceed)
+       
 
 def get_raw_profile(image, frame, half_t_w):
     if half_t_w < 1:
