@@ -117,7 +117,10 @@ def write_intensity_traces(tracks, filepath):
                 row = []
                 row.append(timepoint)
                 row.append(track.intensity.get(timepoint))
-                # row.append(track.step_trace.get(timepoint))
+                try:
+                    row.append(track.step_trace.get(timepoint))
+                except:
+                    None
                 writer.writerow(row)
 
 def save_overlay(tracks, image, filepath):
