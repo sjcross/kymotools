@@ -63,12 +63,16 @@ class Detector():
         frame_peaks = {}
 
         x, vals = get_raw_profile(image,frame,self._half_t_w)
-
         temp_peaks = []
         scores = []
         for n_peaks in range(self._n_max):        
             # Creating initial parameters for fitting
-            (p0,p_lb,p_ub,proceed) = self._initialise_guesses(x,vals,n_peaks)
+            fits = self._initialise_guesses(x,vals,n_peaks)
+
+            if fits is None:
+                break
+
+            (p0,p_lb,p_ub) = fits            
 
             try:
                 res = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))[0]
@@ -77,9 +81,6 @@ class Detector():
                 scores.append(sum(abs(vals-g)))
             except:
                 continue
-
-            if not proceed:
-                break
 
         if len(scores) == 0:
             return frame_peaks
@@ -118,24 +119,24 @@ class Detector():
         return params
 
     def _initialise_guesses(self,x,vals,n_peaks):
-        proceed = True
         p0 = []
         p_lb = []
         p_ub = []
         vals_temp = vals
 
         for peak in range(n_peaks+1):
+            if np.max(vals_temp) < self._peak_det_thresh:
+                return None
+            
             b = vals_temp.argmax()
             try:
                 b_est = ((b-1)*vals_temp[b-1]+b*vals_temp[b]+(b+1)*vals_temp[b+1])/(vals_temp[b-1]+vals_temp[b]+vals_temp[b+1])
             except:
                 b_est = b
-                
+            
             max_val = np.max(vals_temp)
             g = gauss_1D(x, np.max(vals_temp), b_est, self._c_def)
             vals_temp = vals_temp - g
-            if np.max(vals_temp) < self._peak_det_thresh:
-                proceed = False
 
             p0.append(max_val)
             p0.append(b_est)
@@ -149,7 +150,7 @@ class Detector():
             p_ub.append(len(x))
             p_ub.append(self._c_ub)
 
-        return (p0,p_lb,p_ub,proceed)
+        return (p0,p_lb,p_ub)
        
 
 def get_raw_profile(image, frame, half_t_w):
