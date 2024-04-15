@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 class Peak:
@@ -8,6 +9,32 @@ class Peak:
         self.b = b      # X-position
         self.c = c      # Sigma
         self.track = None # Assigned track
+        self.measures = {}
+
+    def calculate_nearest_neighbour(self, peaks, exclude_natching_ID=False):
+        x_1 = self.b
+
+        nn_dist = np.inf
+        nn_id = 0
+
+        for peak in peaks.values():
+            # If comparing to same set of peaks from which this peak came, ignore if ID matches
+            if exclude_natching_ID and peak.ID == self.ID:
+                continue
+
+            x_2 = peak.b
+
+            dist = math.sqrt((x_2-x_1)*(x_2-x_1))
+
+            if dist < nn_dist:
+                nn_dist = dist
+                nn_id = peak.ID
+
+        self.measures['NN_DIST'] = nn_dist
+        self.measures['NN_ID'] = nn_id
+
+        return (nn_dist, nn_id)
+    
 
 class Track:
     def __init__(self, ID):
@@ -17,6 +44,7 @@ class Track:
         self.filtered = {}
         self.step_trace = {}
         self.steps = {}
+        self.measures = {}
         
     def add_peak(self, peak):
         self.peaks[peak.t] = peak
@@ -33,6 +61,13 @@ class Track:
         t_end = min(max(self.peaks.keys())+end_pad, image.shape[1])
         for t in range(t_start,t_end):
             self.intensity[t] = image[x-half_x_w:x+half_x_w,t].mean()
+
+    def measure_msd(self):
+        for t in self.peaks.keys():
+            peak = self.peaks.get(t)
+            x = peak.b
+
+        print("Need to finish MSD calculation")
             
     def apply_temporal_filter(self,half_t_w=1):
         filtered = {}
@@ -85,4 +120,6 @@ class Track:
                     # counts[x,f] = counts[x,f] / (image.shape[1]-f-1)
 
         return counts
+    
+
     
