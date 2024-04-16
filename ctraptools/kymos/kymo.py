@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import math
 import numpy as np
 
@@ -63,11 +64,33 @@ class Track:
             self.intensity[t] = image[x-half_x_w:x+half_x_w,t].mean()
 
     def measure_msd(self):
-        for t in self.peaks.keys():
-            peak = self.peaks.get(t)
-            x = peak.b
+        # Each peak represents a timepoint, so iterating over each peak pair,
+        # adding their value to the time difference.  For this, storing a count 
+        # per time difference is necessary.
+        MSD = {}
+        N = {}
 
-        print("Need to finish MSD calculation")
+        for peak_1 in self.peaks.values():
+            for peak_2 in self.peaks.values():
+                dt = peak_2.t-peak_1.t
+
+                if dt <= 0:
+                    continue
+
+                if dt not in MSD:
+                    MSD[dt] = 0
+                    N[dt] = 0
+
+                MSD[dt] = MSD[dt] + (peak_2.b-peak_1.b)*(peak_2.b-peak_1.b)
+                N[dt] = N[dt] + 1
+
+        # Calculating the average (we shouldn't have a dt of 0)
+        for dt in MSD.keys():
+            MSD[dt] = MSD[dt]/N[dt]
+
+        self.measures['MSD'] = OrderedDict(sorted(MSD.items())) # MSD stored as a dict with timepoints as keys
+
+        return self.measures['MSD']
             
     def apply_temporal_filter(self,half_t_w=1):
         filtered = {}

@@ -88,13 +88,17 @@ def write_change_points(tracks, filepath):
                 row.append(step)
             writer.writerow(row)
 
-def write_peak_traces(tracks, filepath):
+def write_peak_traces(tracks, filepath, extra_columns=None):
     for track in tracks.values():
         with open(filepath+"_ID"+str(track.ID)+".csv", 'w', newline='') as file:
             writer = csv.writer(file)
 
             # Adding header row
-            writer.writerow(['Timepoint','Amplitude','X-position','Sigma'])
+            row = ['Timepoint','Amplitude','X-position','Sigma']
+            if extra_columns is not None:
+                for column in extra_columns:
+                        row.append(column)
+            writer.writerow(row)
 
             for peak in track.peaks.values():
                 row = []
@@ -102,6 +106,10 @@ def write_peak_traces(tracks, filepath):
                 row.append(peak.a)
                 row.append(peak.b)
                 row.append(peak.c)
+
+                if extra_columns is not None:
+                    for column in extra_columns:
+                        row.append(peak.measures[column])
                 
                 writer.writerow(row)
 
