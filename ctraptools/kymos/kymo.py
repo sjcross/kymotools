@@ -3,12 +3,18 @@ from enum import Enum
 from scipy.optimize import curve_fit
 
 import math
+import matplotlib.pyplot as plt
 import numpy as np
 
-class Measures(Enum):
-    MSD = 'MSD'
+class PeakMeasures(Enum):
     NN_DIST = 'Nearest neighbour distance'
     NN_ID = 'Nearest neighbour ID'
+
+class TrackMeasures(Enum):
+    D_COEFF = 'Diffusion coefficient'
+    D_COEFF_INTERCEPT = 'Diffusion coefficient intercept'
+    D_COEFF_RANGE = 'Diffusion coefficient fitting range'
+    MSD = 'MSD'
 
 class Peak:
     def __init__(self, ID, t, a, b, c):
@@ -39,8 +45,8 @@ class Peak:
                 nn_dist = dist
                 nn_id = peak.ID
 
-        self.measures[Measures.NN_DIST] = nn_dist
-        self.measures[Measures.NN_ID] = nn_id
+        self.measures[PeakMeasures.NN_DIST] = nn_dist
+        self.measures[PeakMeasures.NN_ID] = nn_id
 
         return (nn_dist, nn_id)
     
@@ -73,8 +79,8 @@ class Track:
 
     def measure_msd(self, recalculate=False):
         # Checking if MSD has already been calculated
-        if Measures.MSD in self.measures and not recalculate:
-            return self.measures[Measures.MSD]
+        if TrackMeasures.MSD in self.measures and not recalculate:
+            return self.measures[TrackMeasures.MSD]
         
         # Each peak represents a timepoint, so iterating over each peak pair,
         # adding their value to the time difference.  For this, storing a count 
@@ -100,17 +106,13 @@ class Track:
         for dt in msd.keys():
             msd[dt] = msd[dt]/n[dt]
 
-        self.measures[Measures.MSD] = OrderedDict(sorted(msd.items())) # MSD stored as a dict with timepoints as keys
+        self.measures[TrackMeasures.MSD] = OrderedDict(sorted(msd.items())) # MSD stored as a dict with timepoints as keys
 
-        return self.measures[Measures.MSD]
+        return self.measures[TrackMeasures.MSD]
     
     def measure_diffusion_coefficient(self, n=10):
-        # MSD needs to have been calculated first
-        if Measures.MSD in self.measures:
-            self.measure_msd()
-
         # Fitting straight line to first n points of MSD curve
-        msd = self.measures[Measures.MSD]
+        msd = self.measure_msd()
         x = []
         y = []
         
@@ -129,7 +131,38 @@ class Track:
         
         popt = curve_fit(f, x, y)
 
-        return popt[0]
+        self.measures[TrackMeasures.D_COEFF] = popt[0][0]
+        self.measures[TrackMeasures.D_COEFF_INTERCEPT] = popt[0][1]
+        self.measures[TrackMeasures.D_COEFF_RANGE] = n
+
+        return self.measures[TrackMeasures.D_COEFF]
+    
+    def plot_msd(self, show_fit_if_available=True):
+        fig = plt.figure()
+        
+        msd = self.measure_msd()
+        plt.plot(msd.keys(),msd.values())
+        
+        if show_fit_if_available and TrackMeasures.D_COEFF in self.measures:
+            n = 10
+            A = self.measures[TrackMeasures.D_COEFF]
+            B = self.measures[TrackMeasures.D_COEFF_INTERCEPT]
+
+            if TrackMeasures.D_COEFF_RANGE in self.measures:
+                n = self.measures[TrackMeasures.D_COEFF_RANGE]
+            
+            x = range(n)
+            y = x*A + B
+
+            plt.plot(x,y)
+
+        ax = plt.gca()
+        ax.set_xlabel('Time interval (frames)')
+        ax.set_ylabel('MSD (px²)')
+        plt.show()
+
+        return fig
+
             
     def apply_temporal_filter(self,half_t_w=1):
         filtered = {}

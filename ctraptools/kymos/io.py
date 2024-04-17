@@ -1,4 +1,5 @@
 from ctraptools.kymos.detect import gauss_1D, get_raw_profile
+from ctraptools.kymos.kymo import TrackMeasures
 from lumicks import pylake
 from matplotlib.colors import hsv_to_rgb
 from PIL import Image
@@ -189,3 +190,19 @@ def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
     plt.xlabel('Position (px)')
     plt.ylabel('Intensity')
     plt.show()
+
+def save_msd(tracks, filepath):
+    for track in tracks.values():
+        with open(filepath+"_MSD_ID"+str(track.ID)+".csv", 'w', newline='') as file:
+            writer = csv.writer(file)
+
+            # Adding header row
+            writer.writerow(['dt','msd'])
+
+            msd = track.measures[TrackMeasures.MSD]
+            for item in msd.items():
+                row = []
+                row.append(str(item[0]))
+                row.append(str(item[1]))
+
+                writer.writerow(row)
