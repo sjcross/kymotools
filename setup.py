@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='ctraptools',
-      version='0.3.4',
+      version='0.3.3',
       description='Scripts for Lumicks C-Trap data processing',
       url='http://github.com/sjcross/ctraptools',
       author='Stephen Cross',

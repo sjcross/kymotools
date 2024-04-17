@@ -1,6 +1,14 @@
 from collections import OrderedDict
+from enum import Enum
+from scipy.optimize import curve_fit
+
 import math
 import numpy as np
+
+class Measures(Enum):
+    MSD = 'MSD'
+    NN_DIST = 'Nearest neighbour distance'
+    NN_ID = 'Nearest neighbour ID'
 
 class Peak:
     def __init__(self, ID, t, a, b, c):
@@ -31,8 +39,8 @@ class Peak:
                 nn_dist = dist
                 nn_id = peak.ID
 
-        self.measures['NN_DIST'] = nn_dist
-        self.measures['NN_ID'] = nn_id
+        self.measures[Measures.NN_DIST] = nn_dist
+        self.measures[Measures.NN_ID] = nn_id
 
         return (nn_dist, nn_id)
     
@@ -63,12 +71,16 @@ class Track:
         for t in range(t_start,t_end):
             self.intensity[t] = image[x-half_x_w:x+half_x_w,t].mean()
 
-    def measure_msd(self):
+    def measure_msd(self, recalculate=False):
+        # Checking if MSD has already been calculated
+        if Measures.MSD in self.measures and not recalculate:
+            return self.measures[Measures.MSD]
+        
         # Each peak represents a timepoint, so iterating over each peak pair,
         # adding their value to the time difference.  For this, storing a count 
         # per time difference is necessary.
-        MSD = {}
-        N = {}
+        msd = {}
+        n = {}
 
         for peak_1 in self.peaks.values():
             for peak_2 in self.peaks.values():
@@ -77,20 +89,47 @@ class Track:
                 if dt <= 0:
                     continue
 
-                if dt not in MSD:
-                    MSD[dt] = 0
-                    N[dt] = 0
+                if dt not in msd:
+                    msd[dt] = 0
+                    n[dt] = 0
 
-                MSD[dt] = MSD[dt] + (peak_2.b-peak_1.b)*(peak_2.b-peak_1.b)
-                N[dt] = N[dt] + 1
+                msd[dt] = msd[dt] + (peak_2.b-peak_1.b)*(peak_2.b-peak_1.b)
+                n[dt] = n[dt] + 1
 
         # Calculating the average (we shouldn't have a dt of 0)
-        for dt in MSD.keys():
-            MSD[dt] = MSD[dt]/N[dt]
+        for dt in msd.keys():
+            msd[dt] = msd[dt]/n[dt]
 
-        self.measures['MSD'] = OrderedDict(sorted(MSD.items())) # MSD stored as a dict with timepoints as keys
+        self.measures[Measures.MSD] = OrderedDict(sorted(msd.items())) # MSD stored as a dict with timepoints as keys
 
-        return self.measures['MSD']
+        return self.measures[Measures.MSD]
+    
+    def measure_diffusion_coefficient(self, n=10):
+        # MSD needs to have been calculated first
+        if Measures.MSD in self.measures:
+            self.measure_msd()
+
+        # Fitting straight line to first n points of MSD curve
+        msd = self.measures[Measures.MSD]
+        x = []
+        y = []
+        
+        i = 0
+        for dt,curr_msd in msd.items():
+            if i > n:
+                break
+            
+            x.append(dt)
+            y.append(curr_msd)
+            
+            i = i + 1
+            
+        def f(x, A, B):
+            return A*x + B
+        
+        popt = curve_fit(f, x, y)
+
+        return popt[0]
             
     def apply_temporal_filter(self,half_t_w=1):
         filtered = {}
