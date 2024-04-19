@@ -9,13 +9,14 @@ from PIL import ImageFont
 import csv
 import ctraptools.utils.fileutils as fu
 import ctraptools.utils.imageutils as iu
-import imageio as io
+import imageio.v3 as io
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pkg_resources
 import random
+import re
 import tifffile
 
 def save_kymo(kymo, output_filename, output_range=None):
@@ -73,6 +74,48 @@ def read_image(path,channel,x_range=None):
         image = image[:,x_range[0]:x_range[1]]
 
     return image
+
+def read_image_calibration(path):
+    spatial_scale = None
+    spatial_units = None
+    time_scale = None
+    time_units = None
+    
+    # Checking for Lumicks metadata format
+    info = io.immeta(path).get('Info')
+    if 'Comment = {' in info:
+        spatial_pattern = re.compile(r'Pixel size \((.+)\)\":.+([0-9]+\.[0-9]+)[^\r]')
+        spatial_match = spatial_pattern.search(info)
+        if spatial_match is not None:
+            spatial_units = spatial_match[1]
+            spatial_scale = float(spatial_match[2])
+            
+        time_pattern = re.compile(r'Line time \((.+)\)\":.+([0-9]+\.[0-9]+)[^\r]')
+        time_match = time_pattern.search(info)
+        time_scale = None
+        if time_match is not None:
+            time_units = time_match[1]
+            time_scale = float(time_match[2])
+
+    else:
+        # Using plain tif calibration
+        with tifffile.TiffFile(path) as tif:
+            tags = tif.pages[0].tags
+            
+            (time_cal,time_range) = tags.get('XResolution').value
+            time_scale = time_range/time_cal
+            
+            (spatial_cal,spatial_range) = tags.get('YResolution').value
+            spatial_scale = spatial_range/spatial_cal
+
+            ij_meta = tif.imagej_metadata
+            if ij_meta is not None:
+                time_units = ij_meta.get('unit')
+                spatial_units = ij_meta.get('yunit')
+                if spatial_units == '\\u00B5m':
+                    spatial_units = "μm"
+        
+    return(spatial_scale,spatial_units,time_scale,time_units)
 
 def write_change_points(tracks, filepath):
     with open(filepath+".csv", 'w', newline='') as file:
@@ -191,18 +234,4 @@ def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
     plt.ylabel('Intensity')
     plt.show()
 
-def save_msd(tracks, filepath):
-    for track in tracks.values():
-        with open(filepath+"_MSD_ID"+str(track.ID)+".csv", 'w', newline='') as file:
-            writer = csv.writer(file)
 
-            # Adding header row
-            writer.writerow(['dt','msd'])
-
-            msd = track.measures[TrackMeasures.MSD]
-            for item in msd.items():
-                row = []
-                row.append(str(item[0]))
-                row.append(str(item[1]))
-
-                writer.writerow(row)

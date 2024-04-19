@@ -1,9 +1,6 @@
-from collections import OrderedDict
 from enum import Enum
-from scipy.optimize import curve_fit
 
 import math
-import matplotlib.pyplot as plt
 import numpy as np
 
 class PeakMeasures(Enum):
@@ -11,9 +8,6 @@ class PeakMeasures(Enum):
     NN_ID = 'Nearest neighbour ID'
 
 class TrackMeasures(Enum):
-    D_COEFF = 'Diffusion coefficient'
-    D_COEFF_INTERCEPT = 'Diffusion coefficient intercept'
-    D_COEFF_RANGE = 'Diffusion coefficient fitting range'
     MSD = 'MSD'
 
 class Peak:
@@ -76,93 +70,6 @@ class Track:
         t_end = min(max(self.peaks.keys())+end_pad, image.shape[1])
         for t in range(t_start,t_end):
             self.intensity[t] = image[x-half_x_w:x+half_x_w,t].mean()
-
-    def measure_msd(self, recalculate=False):
-        # Checking if MSD has already been calculated
-        if TrackMeasures.MSD in self.measures and not recalculate:
-            return self.measures[TrackMeasures.MSD]
-        
-        # Each peak represents a timepoint, so iterating over each peak pair,
-        # adding their value to the time difference.  For this, storing a count 
-        # per time difference is necessary.
-        msd = {}
-        n = {}
-
-        for peak_1 in self.peaks.values():
-            for peak_2 in self.peaks.values():
-                dt = peak_2.t-peak_1.t
-
-                if dt <= 0:
-                    continue
-
-                if dt not in msd:
-                    msd[dt] = 0
-                    n[dt] = 0
-
-                msd[dt] = msd[dt] + (peak_2.b-peak_1.b)*(peak_2.b-peak_1.b)
-                n[dt] = n[dt] + 1
-
-        # Calculating the average (we shouldn't have a dt of 0)
-        for dt in msd.keys():
-            msd[dt] = msd[dt]/n[dt]
-
-        self.measures[TrackMeasures.MSD] = OrderedDict(sorted(msd.items())) # MSD stored as a dict with timepoints as keys
-
-        return self.measures[TrackMeasures.MSD]
-    
-    def measure_diffusion_coefficient(self, n=10):
-        # Fitting straight line to first n points of MSD curve
-        msd = self.measure_msd()
-        x = []
-        y = []
-        
-        i = 0
-        for dt,curr_msd in msd.items():
-            if i > n:
-                break
-            
-            x.append(dt)
-            y.append(curr_msd)
-            
-            i = i + 1
-            
-        def f(x, A, B):
-            return A*x + B
-        
-        popt = curve_fit(f, x, y)
-
-        self.measures[TrackMeasures.D_COEFF] = popt[0][0]
-        self.measures[TrackMeasures.D_COEFF_INTERCEPT] = popt[0][1]
-        self.measures[TrackMeasures.D_COEFF_RANGE] = n
-
-        return self.measures[TrackMeasures.D_COEFF]
-    
-    def plot_msd(self, show_fit_if_available=True):
-        fig = plt.figure()
-        
-        msd = self.measure_msd()
-        plt.plot(msd.keys(),msd.values())
-        
-        if show_fit_if_available and TrackMeasures.D_COEFF in self.measures:
-            n = 10
-            A = self.measures[TrackMeasures.D_COEFF]
-            B = self.measures[TrackMeasures.D_COEFF_INTERCEPT]
-
-            if TrackMeasures.D_COEFF_RANGE in self.measures:
-                n = self.measures[TrackMeasures.D_COEFF_RANGE]
-            
-            x = range(n)
-            y = x*A + B
-
-            plt.plot(x,y)
-
-        ax = plt.gca()
-        ax.set_xlabel('Time interval (frames)')
-        ax.set_ylabel('MSD (px²)')
-        plt.show()
-
-        return fig
-
             
     def apply_temporal_filter(self,half_t_w=1):
         filtered = {}
