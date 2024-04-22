@@ -58,19 +58,18 @@ class MSD:
 
         return self.msd
     
-    def measure_diffusion_coefficient(self, n=10):
+    def measure_diffusion_coefficient(self, max_dt=50):
         # Fitting straight line to first n points of MSD curve
         x = []
         y = []
 
-        i = 0
         for [dt,val,count] in self.msd.values():
+            if dt > max_dt:
+                break
+
             x.append(dt)
             y.append(val)
-            if i > n:
-                break
-            i = i + 1
-            
+                        
         def f(x, A, B):
             return A*x + B
         

@@ -212,3 +212,19 @@ class TraceAnalyser:
             self._hist_ax.yaxis.set_tick_params(which='minor', bottom=False)
 
             self._fig.canvas.draw_idle()
+
+def remove_tracks_by_id(tracks):
+    ids_to_remove = input("Enter track IDs to remove: ")
+
+    for id_to_remove in ids_to_remove:
+        tracks.pop(id_to_remove)
+
+def retain_tracks_by_id(tracks):
+    ids_to_retain = input("Enter track IDs to retain: ")
+
+    ids_to_remove = tracks.keys()
+    for id_to_retain in ids_to_retain:
+        ids_to_remove.pop(id_to_retain)
+
+    for id_to_remove in ids_to_remove:
+        tracks.pop(id_to_remove)
