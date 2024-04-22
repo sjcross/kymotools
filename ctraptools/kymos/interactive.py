@@ -222,9 +222,10 @@ def remove_tracks_by_id(tracks):
 def retain_tracks_by_id(tracks):
     ids_to_retain = input("Enter track IDs to retain: ")
 
-    ids_to_remove = tracks.keys()
+    ids_to_remove = list(tracks.keys())
+
     for id_to_retain in ids_to_retain:
-        ids_to_remove.pop(id_to_retain)
+        ids_to_remove.remove(int(id_to_retain))
 
     for id_to_remove in ids_to_remove:
         tracks.pop(id_to_remove)

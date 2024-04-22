@@ -175,7 +175,7 @@ def write_intensity_traces(tracks, filepath):
                     None
                 writer.writerow(row)
 
-def save_overlay(tracks, image, filepath):
+def create_overlay(tracks, image):
     # Making 3 channels
     image = np.copy(image)
     image *= (255.0/image.max())
@@ -196,6 +196,7 @@ def save_overlay(tracks, image, filepath):
             image[math.floor(peak.b),math.floor(peak.t),2] = colour[2]*255
     
     img = Image.fromarray(image.astype(np.uint8))
+
     I1 = ImageDraw.Draw(img)
     myFont = ImageFont.truetype(pkg_resources.resource_filename('ctraptools','resources/fonts/Roboto-Regular.ttf'), 16)
             
@@ -206,6 +207,11 @@ def save_overlay(tracks, image, filepath):
         # Adding a label to the centre of each line       
         cent = list(track.peaks.values())[math.floor(len(track.peaks)/2)]
         I1.text((cent.t,cent.b), str(track.ID), font=myFont, fill = ((colour[0]*255).astype(np.uint8),(colour[1]*255).astype(np.uint8),(colour[2]*255).astype(np.uint8)))
+
+    return img
+
+def save_overlay(tracks, image, filepath):
+    img = create_overlay(tracks, image)
 
     img.save(filepath+"_IDs.png")
 
