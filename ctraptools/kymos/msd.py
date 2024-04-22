@@ -77,26 +77,29 @@ class MSD:
 
         self.d_coeff = popt[0][0]
         self.d_coeff_intercept = popt[0][1]
-        self.d_coeff_range = n
+        self.d_coeff_range = max_dt
 
         return (self.d_coeff, self.d_coeff_intercept)
     
     def plot(self, show=True, show_fit_if_available=True):
         fig = plt.figure()
         
-        x = []
-        y = []
+        x = [] # Main x values
+        y = [] # Main y values
+        xx = [] # Diffusion coefficient fit x values
+        yy = [] # Diffusion coefficient fit y values
 
         for [dt,val,count] in self.msd.values():
             x.append(dt)
             y.append(val)
 
+            if show_fit_if_available and self.d_coeff is not None and dt <= self.d_coeff_range:
+                xx.append(dt)
+                yy.append(val)
+
         plt.plot(x,y)
         
         if show_fit_if_available and self.d_coeff is not None:
-            xx = np.array(x[0:self.d_coeff_range])        
-            yy = xx*self.d_coeff + self.d_coeff_intercept
-
             plt.plot(xx,yy)
 
         ax = plt.gca()
@@ -128,7 +131,7 @@ class MSD:
                 row.append(str(msd[1]))
                 row.append(str(msd[2]))
 
-                if self.d_coeff is not None and i <= self.d_coeff_range:
+                if self.d_coeff is not None and dt <= self.d_coeff_range:
                     row.append(dt*self.d_coeff + self.d_coeff_intercept)
 
                 writer.writerow(row)
