@@ -95,7 +95,7 @@ class MSD:
 
             if show_fit_if_available and self.d_coeff is not None and dt <= self.d_coeff_range:
                 xx.append(dt)
-                yy.append(val)
+                yy.append(dt*self.d_coeff + self.d_coeff_intercept)
 
         plt.plot(x,y)
         
@@ -124,15 +124,15 @@ class MSD:
             writer.writerow(row)
 
             i = 0
-            for dt,msd in self.msd.items():
+            for dt_f,msd in self.msd.items():
                 row = []
-                row.append(str(dt))
+                row.append(str(dt_f))
                 row.append(str(msd[0]))
                 row.append(str(msd[1]))
                 row.append(str(msd[2]))
 
-                if self.d_coeff is not None and dt <= self.d_coeff_range:
-                    row.append(dt*self.d_coeff + self.d_coeff_intercept)
+                if self.d_coeff is not None and msd[0] <= self.d_coeff_range:
+                    row.append(msd[0]*self.d_coeff + self.d_coeff_intercept)
 
                 writer.writerow(row)
                 i = i + 1
