@@ -21,6 +21,7 @@ class MSD:
         self.d_coeff = None
         self.d_coeff_intercept = None
         self.d_coeff_range = None
+        self.perr = None
 
         # Calcualte MSD
         self.measure_msd()
@@ -73,13 +74,15 @@ class MSD:
         def f(x, A, B):
             return A*x + B
         
-        popt = curve_fit(f, x, y)
+        (popt,pcov) = curve_fit(f, x, y)
+        perr = np.sqrt(np.diag(pcov))
 
-        self.d_coeff = popt[0][0]
-        self.d_coeff_intercept = popt[0][1]
+        self.d_coeff = popt[0]
+        self.d_coeff_intercept = popt[1]
         self.d_coeff_range = max_dt
+        self.perr = perr
 
-        return (self.d_coeff, self.d_coeff_intercept)
+        return (self.d_coeff, self.d_coeff_intercept, self.perr)
     
     def plot(self, show=True, show_fit_if_available=True):
         fig = plt.figure()
