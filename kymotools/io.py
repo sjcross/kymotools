@@ -1,19 +1,15 @@
 from kymotools.kymos.detect import gauss_1D, get_raw_profile
-from kymotools.kymos.kymo import TrackMeasures
-from lumicks import pylake
 from matplotlib.colors import hsv_to_rgb
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
 import csv
-import kymotools.utils.fileutils as fu
 import kymotools.utils.imageutils as iu
 import imageio.v3 as io
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pkg_resources
 import random
 import re
@@ -40,25 +36,6 @@ def save_kymo(kymo, output_filename, output_range=None):
         resolution=(time_res,spat_res,"MICROMETER"),
         metadata={"OutputRange":or_str}
     )
-
-def batch_save_kymos(input_path, output_path, output_range=None, verbose=False):
-    # Creating output folder (if it doesn't already exist)
-    os.makedirs(output_path) if not os.path.exists(output_path) else None      
-
-    # Iterating over all files in the input folder
-    for filename in os.listdir(input_path):
-
-        # Processing all .h5 files (doesn't matter if they have 'Kymograph' in the name)
-        if filename.endswith(".h5"):
-            print("Importing "+filename)
-            file = pylake.File(input_path + filename)
-
-            # Getting kymographs and saving one-by-one
-            kymos = file.kymos
-            for kymo_id in kymos:
-                kymo = kymos.get(kymo_id)    
-                output_filename = output_path + fu.strip_ext(filename) + "_kymo" + kymo_id + ".tiff"
-                save_kymo(kymo, output_filename, output_range=output_range)
 
 def read_image(path,channel,x_range=None):
     image = io.imread(path)
