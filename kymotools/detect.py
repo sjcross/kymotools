@@ -1,7 +1,7 @@
 from scipy.optimize import curve_fit
 from scipy.optimize import linear_sum_assignment
-from ctraptools.kymos.kymo import Peak
-from ctraptools.kymos.kymo import Track
+from kymotools.kymo import Peak
+from kymotools.kymo import Track
 from tqdm import tqdm
 
 import math

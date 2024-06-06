@@ -1,5 +1,5 @@
-from ctraptools.kymos.detect import gauss_1D, get_raw_profile
-from ctraptools.kymos.kymo import TrackMeasures
+from kymotools.kymos.detect import gauss_1D, get_raw_profile
+from kymotools.kymos.kymo import TrackMeasures
 from lumicks import pylake
 from matplotlib.colors import hsv_to_rgb
 from PIL import Image
@@ -7,8 +7,8 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 import csv
-import ctraptools.utils.fileutils as fu
-import ctraptools.utils.imageutils as iu
+import kymotools.utils.fileutils as fu
+import kymotools.utils.imageutils as iu
 import imageio.v3 as io
 import math
 import matplotlib.pyplot as plt
@@ -175,7 +175,7 @@ def write_intensity_traces(tracks, filepath):
                     None
                 writer.writerow(row)
 
-def create_overlay(tracks, image):
+def create_track_overlay(tracks, image, show_labels=True):
     # Making 3 channels
     image = np.copy(image)
     image *= (255.0/image.max())
@@ -197,21 +197,22 @@ def create_overlay(tracks, image):
     
     img = Image.fromarray(image.astype(np.uint8))
 
-    I1 = ImageDraw.Draw(img)
-    myFont = ImageFont.truetype(pkg_resources.resource_filename('ctraptools','resources/fonts/Roboto-Regular.ttf'), 16)
-            
-    for track in tracks.values():
-        random.seed(track.ID)
-        colour = hsv_to_rgb([random.random(),1,1])   
+    if show_labels:
+        I1 = ImageDraw.Draw(img)
+        myFont = ImageFont.truetype(pkg_resources.resource_filename('ctraptools','resources/fonts/Roboto-Regular.ttf'), 16)
+                
+        for track in tracks.values():
+            random.seed(track.ID)
+            colour = hsv_to_rgb([random.random(),1,1])   
 
-        # Adding a label to the centre of each line       
-        cent = list(track.peaks.values())[math.floor(len(track.peaks)/2)]
-        I1.text((cent.t,cent.b), str(track.ID), font=myFont, fill = ((colour[0]*255).astype(np.uint8),(colour[1]*255).astype(np.uint8),(colour[2]*255).astype(np.uint8)))
+            # Adding a label to the centre of each line       
+            cent = list(track.peaks.values())[math.floor(len(track.peaks)/2)]
+            I1.text((cent.t,cent.b), str(track.ID), font=myFont, fill = ((colour[0]*255).astype(np.uint8),(colour[1]*255).astype(np.uint8),(colour[2]*255).astype(np.uint8)))
 
     return img
 
-def save_overlay(tracks, image, filepath):
-    img = create_overlay(tracks, image)
+def save_overlay(tracks, image, filepath, show_labels=True):
+    img = create_track_overlay(tracks, image, show_labels=show_labels)
 
     img.save(filepath+"_IDs.png")
 
@@ -240,4 +241,9 @@ def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
     plt.ylabel('Intensity')
     plt.show()
 
+def plot_inst_msd(peaks):
+    fig = plt.figure()
 
+    
+
+    return fig
