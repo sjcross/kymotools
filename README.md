@@ -1,17 +1,12 @@
-# C-Trap Tools
-A collection of tools to process images and data from a Lumicks C-Trap optical tweezers system.
+# KymoTools
+A collection of tools to process kymographs.  Functions include peak detection and tracking, MSD calculation and plotting.
 
 ## Installation
-To install ctraptools please run the following commands from your terminal.  This will install both ctraptools and [Lumicks' pylake](https://github.com/lumicks/pylake) package.
+To install kymotools please run the following command from your terminal.  This will install kymotools and all necessary dependencies.
 
 ```
-pip install git+https://github.com/sjcross/ctraptools
-pip install lumicks.pylake
-
-Optional (only needed for interactive elements)
-pip install jupyter
-pip install ipympl
+pip install kymotools
 ```
 
 ## Example notebooks
-Example notebooks using these tools can be found in the [ctrapnotebooks](https://github.com/sjcross/ctraptools/tree/main/examplenotebooks) folder.
+Example notebooks using these tools can be found in the [kymotools-notebooks](https://github.com/sjcross/kymotools-notebooks) repository.

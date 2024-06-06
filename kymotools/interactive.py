@@ -1,3 +1,4 @@
+import math
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,8 +6,13 @@ import numpy as np
 from matplotlib.widgets import Slider, SpanSelector
 from scipy.signal import butter, sosfiltfilt
 
-class DisplayRangeSelector:
-    def __init__(self, kymo, px_min=0, px_max=255):
+class KymoSelector:
+    def __init__(self, kymo, px_min=0, px_max=255,channel=None):
+        self._channel = channel
+        self._abs_range_min = 0
+        self._abs_range_max = kymo.get_image(channel='red').shape[1]-1 # Maximum number of frames minus 1
+        self._range_min = self._abs_range_min
+        self._range_max = self._abs_range_max
         self._px_min = px_min
         self._px_max = px_max
         self._min_slider = None # Sliders have to be retained to keep them active
@@ -14,8 +20,12 @@ class DisplayRangeSelector:
         self._plot = None
         
         self._create_plot(kymo)
-                        
+
     def _create_plot(self, kymo):
+        def on_span_select(range_min, range_max):
+            self._range_min = max(self._abs_range_min,math.floor(range_min))
+            self._range_max = min(self._abs_range_max,math.ceil(range_max))
+
         def update_min_intensity(val):
             self._px_min = val
             self._update_plot()
@@ -27,13 +37,25 @@ class DisplayRangeSelector:
         fig, ax1 = plt.subplots(1, figsize=(8,5))
         fig.subplots_adjust(left=0.25, bottom=0.35)
         
-        kymo_line_length = kymo.size_um[0]
-        raw_kymo = kymo.get_image(channel='red')
-        t_stop = (kymo.stop-kymo.start)*1E-9
-        self._plot = ax1.imshow(raw_kymo, aspect=3, cmap='viridis', extent=[0, t_stop, 0, kymo_line_length], norm=mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
-        ax1.set_xlabel('Time (s)', fontsize=12)
+        if self._channel is None:
+            raw_kymo = kymo.get_image()
+        else:
+            raw_kymo = kymo.get_image(channel=self._channel)
+            
+        self._plot = ax1.imshow(raw_kymo, aspect=3, cmap='viridis', norm=mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
+        ax1.set_xlabel('Frame', fontsize=12)
         ax1.set_ylabel('Distance ($\mu$m)', fontsize=12)
         
+        self._span_selector_trace = SpanSelector(
+            ax1,
+            on_span_select,
+            "horizontal",
+            useblit=True,
+            props=dict(alpha=0.5, facecolor="tab:blue"),
+            interactive=True,
+            drag_from_anywhere=True
+        )
+
         ax_min_int = fig.add_axes([0.25, 0.2, 0.65, 0.03])
         self._min_slider = Slider(
             ax=ax_min_int,
@@ -59,9 +81,12 @@ class DisplayRangeSelector:
     def _update_plot(self):
         self._plot.set_norm(mpl.colors.Normalize(vmin=self._px_min, vmax=self._px_max, clip=False))
         
-    def get_range(self):
+    def get_display_range(self):
         return (self._px_min, self._px_max)
-
+    
+    def get_frame_range(self):
+        return (self._range_min, self._range_max)
+    
 class TraceAnalyser:
     def __init__(self, kymo, time_ns, data, y_label = "Force (pN)", px_min=0, px_max=255, hist_n_bins=150):
         self._time_s = (time_ns - time_ns[0])/1000000000
@@ -109,7 +134,7 @@ class TraceAnalyser:
         # Full length trace
         ax3.plot(self._time_s, self._data, color='black')
         ax3.set_ylabel(self._y_label)
-        ax3.get_shared_x_axes().join(ax1, ax3)
+        ax3.sharex(ax1)
         ax3.set_xticklabels([])
         self._span_selector_trace = SpanSelector(
             ax3,
@@ -181,9 +206,26 @@ class TraceAnalyser:
             self._hist_ax.hist(bins[:-1], bins, weights=counts, orientation="horizontal")
             self._hist_ax.set_xlabel("Counts")
             self._hist_ax.set_title('Frequencies (raw force)', fontsize=8)
-            self._hist_ax.get_shared_y_axes().join(self._crop_plot_ax, self._hist_ax)
+            self._hist_ax.sharey(self._crop_plot_ax)
             self._hist_ax.set_yticklabels([])
             self._hist_ax.minorticks_on()
             self._hist_ax.yaxis.set_tick_params(which='minor', bottom=False)
 
             self._fig.canvas.draw_idle()
+
+def remove_tracks_by_id(tracks):
+    ids_to_remove = input("Enter track IDs to remove: ").split(',')
+
+    for id_to_remove in ids_to_remove:
+        tracks.pop(id_to_remove)
+
+def retain_tracks_by_id(tracks):
+    ids_to_retain = input("Enter track IDs to retain: ").split(',')
+
+    ids_to_remove = list(tracks.keys())
+
+    for id_to_retain in ids_to_retain:
+        ids_to_remove.remove(int(id_to_retain))
+
+    for id_to_remove in ids_to_remove:
+        tracks.pop(id_to_remove)
