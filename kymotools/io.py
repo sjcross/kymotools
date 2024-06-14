@@ -1,4 +1,4 @@
-from kymotools.kymos.detect import gauss_1D, get_raw_profile
+from kymotools.detect import gauss_1D, get_raw_profile
 from matplotlib.colors import hsv_to_rgb
 from PIL import Image
 from PIL import ImageDraw
