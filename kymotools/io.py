@@ -1,3 +1,4 @@
+from enum import Enum
 from kymotools.detect import gauss_1D, get_raw_profile
 from matplotlib.colors import hsv_to_rgb
 from PIL import Image
@@ -109,30 +110,39 @@ def write_change_points(tracks, filepath):
                 row.append(step)
             writer.writerow(row)
 
-def write_peak_traces(tracks, filepath, extra_columns=None):
-    for track in tracks.values():
-        with open(filepath+"_ID"+str(track.ID)+".csv", 'w', newline='') as file:
-            writer = csv.writer(file)
+def write_peak_data(peaks, filepath, extra_columns=None):
+    with open(filepath, 'w', newline='') as file:
+        writer = csv.writer(file)
 
-            # Adding header row
-            row = ['Timepoint','Amplitude','X-position','Sigma']
+        # Adding header row
+        row = ['PeakID','Timepoint','Amplitude','Position (px)','Sigma (px)']
+        if extra_columns is not None:
+            for column in extra_columns:
+                if isinstance(column, Enum):
+                    row.append(column.value)
+                else:
+                    row.append(column)
+        writer.writerow(row)
+
+        for peak in peaks.values():
+            row = []
+            row.append(peak.ID)
+            row.append(peak.t)
+            row.append(peak.a)
+            row.append(peak.b)
+            row.append(peak.c)
+
             if extra_columns is not None:
                 for column in extra_columns:
-                        row.append(column)
+                    row.append(peak.measures[column])
+            
             writer.writerow(row)
 
-            for peak in track.peaks.values():
-                row = []
-                row.append(peak.t)
-                row.append(peak.a)
-                row.append(peak.b)
-                row.append(peak.c)
+        writer.writerow('')
 
-                if extra_columns is not None:
-                    for column in extra_columns:
-                        row.append(peak.measures[column])
-                
-                writer.writerow(row)
+def write_track_data(tracks, root_filepath, extra_columns=None):
+    for track in tracks.values():
+        write_peak_data(track.peaks, root_filepath+"_ID"+str(track.ID)+".csv", extra_columns)
 
 def write_intensity_traces(tracks, filepath):
     for track in tracks.values():
@@ -176,7 +186,7 @@ def create_track_overlay(tracks, image, show_labels=True):
 
     if show_labels:
         I1 = ImageDraw.Draw(img)
-        myFont = ImageFont.truetype(pkg_resources.resource_filename('ctraptools','resources/fonts/Roboto-Regular.ttf'), 16)
+        myFont = ImageFont.truetype(pkg_resources.resource_filename('kymotools','resources/fonts/Roboto-Regular.ttf'), 16)
                 
         for track in tracks.values():
             random.seed(track.ID)
@@ -204,7 +214,7 @@ def save_plots(tracks, filepath):
         plt.savefig(filepath+"_ID"+str(track.ID)+".png")
 
 def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
-    plt.figure(figsize=(14,8))
+    fig = plt.figure(figsize=(14,8))
 
     x, vals = get_raw_profile(image,frame,half_t_w)
     plt.plot(x,vals,color="black",linewidth=4)
@@ -218,9 +228,9 @@ def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
     plt.ylabel('Intensity')
     plt.show()
 
-def plot_inst_msd(peaks):
-    fig = plt.figure()
+    return fig 
 
-    
+def plot_inst_msd(peaks):
+    fig = plt.figure()    
 
     return fig
