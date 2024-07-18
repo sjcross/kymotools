@@ -102,6 +102,8 @@ class Track:
 
         self.measures[TrackMeasures.MSD] = curr_msd
 
+        return curr_msd
+
     def calculate_instantaneous_msd(self, half_w=5, spatial_scale=1,spatial_units="pixels",time_scale=1,time_units="frames",calculate_D=True,max_dt=50):
         for peak in self.peaks.values():
             # Get subtrack
@@ -111,7 +113,12 @@ class Track:
             curr_msd = MSD(subtrack,spatial_scale=spatial_scale,spatial_units=spatial_units,time_scale=time_scale,time_units=time_units)        
 
             if calculate_D:
-                peak.measures[PeakMeasures.INST_D_COEFF] = curr_msd.measure_diffusion_coefficient(max_dt=max_dt)[0]
+                inst_D = curr_msd.measure_diffusion_coefficient(max_dt=max_dt)
+
+                if inst_D is None:
+                    peak.measures[PeakMeasures.INST_D_COEFF] = None
+                else:
+                    peak.measures[PeakMeasures.INST_D_COEFF] = inst_D[0]
 
             peak.measures[PeakMeasures.INST_MSD] = curr_msd
 

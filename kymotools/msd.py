@@ -63,14 +63,17 @@ class MSD:
         # Fitting straight line to first n points of MSD curve
         x = []
         y = []
-
+        
         for [dt,val,count] in self.msd.values():
             if dt > max_dt:
                 break
 
             x.append(dt)
             y.append(val)
-                        
+
+        if len(y) <= 1:
+            return None
+                                
         def f(x, A, B):
             return A*x + B
         
