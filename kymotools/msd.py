@@ -71,7 +71,7 @@ class MSD:
             x.append(dt)
             y.append(val)
 
-        if len(y) <= 1:
+        if len(y) <= 2:
             return None
                                 
         def f(x, A, B):
