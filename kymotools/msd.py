@@ -51,7 +51,7 @@ class MSD:
                 msd[dt_f][1] = msd[dt_f][1] + (x_2-x_1)*(x_2-x_1)
                 msd[dt_f][2] = msd[dt_f][2] + 1
 
-        # Calculating the average (we shouldn't have a dt of 0)
+        # Calculating the average
         for dt_f in msd.keys():
             msd[dt_f][1] = msd[dt_f][1]/msd[dt_f][2]
 
@@ -59,7 +59,7 @@ class MSD:
 
         return self.msd
     
-    def measure_diffusion_coefficient(self, max_dt=50):
+    def measure_diffusion_coefficient(self, max_dt=50, nonzero_intercept=True):
         # Fitting straight line to first n points of MSD curve
         x = []
         y = []
@@ -74,14 +74,21 @@ class MSD:
         if len(y) <= 2:
             return None
                                 
-        def f(x, A, B):
-            return A*x + B
+        if nonzero_intercept:
+            def f(x, A, B):
+                return A*x + B
+        else:
+            def f(x,A):
+                return A*x
         
         (popt,pcov) = curve_fit(f, x, y)
         perr = np.sqrt(np.diag(pcov))
 
-        self.d_coeff = popt[0]
-        self.d_coeff_intercept = popt[1]
+        self.d_coeff = popt[0]/2
+        if nonzero_intercept:
+            self.d_coeff_intercept = popt[1]
+        else:
+            self.d_coeff_intercept = 0
         self.d_coeff_range = max_dt
         self.perr = perr
 
@@ -101,7 +108,7 @@ class MSD:
 
             if show_fit_if_available and self.d_coeff is not None and dt <= self.d_coeff_range:
                 xx.append(dt)
-                yy.append(dt*self.d_coeff + self.d_coeff_intercept)
+                yy.append(dt*self.d_coeff*2 + self.d_coeff_intercept)
 
         plt.plot(x,y)
         
