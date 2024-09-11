@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/kymotools-{{ version }}.tar.gz
-  sha256: b323536a591467dae977fa44a192b1db3d47a2b9a49e80848ea6a4fb68f89035
+  sha256: 4a2fc45ebae67712852b843c505c4df07df0c92a08f7a482ed79449e971c95be
 
 build:
   noarch: python
