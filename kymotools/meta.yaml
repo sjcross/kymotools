@@ -1,0 +1,44 @@
+{% set name = "kymotools" %}
+{% set version = "0.4.4" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/kymotools-{{ version }}.tar.gz
+  sha256: 4a2fc45ebae67712852b843c505c4df07df0c92a08f7a482ed79449e971c95be
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python >=3.8
+    - setuptools >=61.0
+    - pip
+  run:
+    - python >=3.8
+    - matplotlib-base >=3.0.0
+    - scipy >=1.0.0
+    - tifffile >=2021.1.8
+    - tqdm >=4.1.0
+
+test:
+  imports:
+    - kymotools
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  summary: Scripts for kymograph processing
+  license: GPL-3.0
+  license_file: LICENSE
+
+extra:
+  recipe-maintainers:
+    - sjcross

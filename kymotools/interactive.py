@@ -214,13 +214,13 @@ class TraceAnalyser:
             self._fig.canvas.draw_idle()
 
 def remove_tracks_by_id(tracks):
-    ids_to_remove = input("Enter track IDs to remove: ").split(',')
+    ids_to_remove = input("Enter track IDs to remove (comma-separated list): ").split(',')
 
     for id_to_remove in ids_to_remove:
         tracks.pop(id_to_remove)
 
 def retain_tracks_by_id(tracks):
-    ids_to_retain = input("Enter track IDs to retain: ").split(',')
+    ids_to_retain = input("Enter track IDs to retain (comma-separated list): ").split(',')
 
     ids_to_remove = list(tracks.keys())
 

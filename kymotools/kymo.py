@@ -94,15 +94,17 @@ class Track:
     def get_sigmas(self):
         return [peak.c for peak in self.peaks.values()]
     
-    def calculate_msd(self,spatial_scale=1,spatial_units="pixels",time_scale=1,time_units="frames",calculate_D=True,max_dt=50):
+    def calculate_msd(self,spatial_scale=1,spatial_units="pixels",time_scale=1,time_units="frames",calculate_D=True,max_dt=50,nonzero_intercept=True):
         curr_msd = MSD(self,spatial_scale=spatial_scale,spatial_units=spatial_units,time_scale=time_scale,time_units=time_units)
 
         if calculate_D:
-            curr_msd.measure_diffusion_coefficient(max_dt=max_dt)
+            curr_msd.measure_diffusion_coefficient(max_dt=max_dt, nonzero_intercept=nonzero_intercept)
 
         self.measures[TrackMeasures.MSD] = curr_msd
 
-    def calculate_instantaneous_msd(self, half_w=5, spatial_scale=1,spatial_units="pixels",time_scale=1,time_units="frames",calculate_D=True,max_dt=50):
+        return curr_msd
+
+    def calculate_instantaneous_msd(self, half_w=5, spatial_scale=1,spatial_units="pixels",time_scale=1,time_units="frames",calculate_D=True,max_dt=50,nonzero_intercept=True):
         for peak in self.peaks.values():
             # Get subtrack
             subtrack = self.extract_subtrack(peak.t-half_w,peak.t+half_w)
@@ -111,7 +113,12 @@ class Track:
             curr_msd = MSD(subtrack,spatial_scale=spatial_scale,spatial_units=spatial_units,time_scale=time_scale,time_units=time_units)        
 
             if calculate_D:
-                peak.measures[PeakMeasures.INST_D_COEFF] = curr_msd.measure_diffusion_coefficient(max_dt=max_dt)[0]
+                inst_D = curr_msd.measure_diffusion_coefficient(max_dt=max_dt,nonzero_intercept=nonzero_intercept)
+
+                if inst_D is None:
+                    peak.measures[PeakMeasures.INST_D_COEFF] = None
+                else:
+                    peak.measures[PeakMeasures.INST_D_COEFF] = inst_D[0]
 
             peak.measures[PeakMeasures.INST_MSD] = curr_msd
 

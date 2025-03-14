@@ -1,6 +1,6 @@
 [project]
 name = "kymotools"
-version = "0.4.0"
+version = "0.4.4"
 authors = [
   { name="Stephen Cross", email="stephen.cross@bristol.ac.uk" },
 ]
@@ -9,7 +9,10 @@ readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
-    "pylake>=0.1.0"
+    "matplotlib>=3.0.0",
+    "scipy>=1.0.0",
+    "tifffile>=2021.1.8",
+    "tqdm>=4.1.0"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
