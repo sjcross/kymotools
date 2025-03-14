@@ -75,10 +75,11 @@ class Detector():
             (p0,p_lb,p_ub) = fits            
 
             try:
-                res = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))[0]
-                g = multi_gauss_1D(x,*res)
-                temp_peaks.append(res)
+                popt = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))[0]
+                g = multi_gauss_1D(x,*popt)
+                temp_peaks.append(popt)
                 scores.append(sum(abs(vals-g)))
+                
             except:
                 continue
 
@@ -97,7 +98,13 @@ class Detector():
             peak = Peak(peak_id, frame, best_peaks[i], best_peaks[i+1], best_peaks[i+2])
             frame_peaks[peak_id] = peak   
 
-        return frame_peaks      
+        # Calculating R2 using example from https://stackoverflow.com/questions/19189362/getting-the-r-squared-value-using-curve-fit (Accessed 2025-03-04)
+        residuals = vals-multi_gauss_1D(x,*best_peaks)
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((vals-np.mean(vals))**2)
+        r_squared = 1-(ss_res / ss_tot)
+            
+        return frame_peaks, r_squared
 
     def get_parameters(self): 
         params = {}
