@@ -213,10 +213,17 @@ def save_plots(tracks, filepath):
 
         plt.savefig(filepath+"_ID"+str(track.ID)+".png")
 
-def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
+def plot_gauss_for_frame(peaks, frame, image=None, half_t_w=3, vals=None):
     fig = plt.figure(figsize=(14,8))
 
-    x, vals = get_raw_profile(image,frame,half_t_w)
+    if image is not None:
+        x, vals = get_raw_profile(image,frame,half_t_w)
+    elif vals is not None:
+        x = np.arange(len(vals))
+    else:
+        print("Please provide either an image or vals for plotting Gaussians")
+        return
+          
     plt.plot(x,vals,color="black",linewidth=4)
 
     for peak in peaks.values():
@@ -230,7 +237,7 @@ def plot_gauss_for_frame(peaks, frame, image, half_t_w=3):
 
     return fig 
 
-def plot_inst_msd(peaks):
-    fig = plt.figure()    
+# def plot_inst_msd(peaks):
+#     fig = plt.figure()    
 
-    return fig
+#     return fig
