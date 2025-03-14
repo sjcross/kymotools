@@ -31,7 +31,8 @@ class Detector():
         tracks = {}
 
         for frame in tqdm(range(image.shape[1])):
-            frame_peaks = self.fit_peaks(image,frame)
+            vals = get_raw_profile(image,frame,self._half_t_w)
+            frame_peaks = self.fit_peaks(image,vals,frame)
 
             # Determining the maximum peak ID and adding 1
             max_peak_id = 0
@@ -59,10 +60,11 @@ class Detector():
 
         return tracks
 
-    def fit_peaks(self,image,frame):
+    def fit_peaks(self,vals,frame=0):
         frame_peaks = {}
-
-        x, vals = get_raw_profile(image,frame,self._half_t_w)
+        
+        x = np.arange(len(vals))
+            
         temp_peaks = []
         scores = []
         for n_peaks in range(self._n_max):        
@@ -98,13 +100,10 @@ class Detector():
             peak = Peak(peak_id, frame, best_peaks[i], best_peaks[i+1], best_peaks[i+2])
             frame_peaks[peak_id] = peak   
 
-        # Calculating R2 using example from https://stackoverflow.com/questions/19189362/getting-the-r-squared-value-using-curve-fit (Accessed 2025-03-04)
-        residuals = vals-multi_gauss_1D(x,*best_peaks)
-        ss_res = np.sum(residuals**2)
-        ss_tot = np.sum((vals-np.mean(vals))**2)
-        r_squared = 1-(ss_res / ss_tot)
+        fit_vals = multi_gauss_1D(x, *popt)
+        rmse = np.sqrt(np.mean((vals - fit_vals) ** 2))
             
-        return frame_peaks, r_squared
+        return frame_peaks, rmse
 
     def get_parameters(self): 
         params = {}
@@ -166,10 +165,8 @@ def get_raw_profile(image, frame, half_t_w):
     else:
         widevals = image[:, max(0,frame-half_t_w):min(frame+half_t_w,image.shape[1]-1)]
         vals = np.median(widevals, 1)
-        
-    x = np.arange(len(vals))
 
-    return (x,vals)
+    return vals
 
 # Gaussian functions
 def gauss_1D(x, a, b, c):
