@@ -213,7 +213,7 @@ def save_plots(tracks, filepath):
 
         plt.savefig(filepath+"_ID"+str(track.ID)+".png")
 
-def plot_gauss_for_frame(peaks, frame, image=None, half_t_w=3, vals=None):
+def plot_gauss_for_frame(peaks, frame, image=None, half_t_w=3, vals=None, xg=None, raw_style=None):
     fig = plt.figure(figsize=(14,8))
 
     if image is not None:
@@ -223,13 +223,21 @@ def plot_gauss_for_frame(peaks, frame, image=None, half_t_w=3, vals=None):
     else:
         print("Please provide either an image or vals for plotting Gaussians")
         return
-          
-    plt.plot(x,vals,color="black",linewidth=4)
+    
+    match (raw_style):
+        case None | "line":
+            plt.plot(x,vals,color="black",linewidth=4)
+        case "bar":
+            plt.bar(x,vals,color="grey")
 
     for peak in peaks.values():
         if peak.t == frame:
-            g0 = gauss_1D(x,peak.a,peak.b,peak.c)
-            plt.plot(x,g0)
+            if xg is None:
+                g0 = gauss_1D(x,peak.a,peak.b,peak.c)
+                plt.plot(x,g0)
+            else:
+                g0 = gauss_1D(xg,peak.a,peak.b,peak.c)
+                plt.plot(xg,g0)
     
     plt.xlabel('Position (px)')
     plt.ylabel('Intensity')
