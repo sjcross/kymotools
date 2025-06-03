@@ -217,7 +217,7 @@ def plot_gauss_for_frame(peaks, frame, image=None, half_t_w=3, vals=None, xg=Non
     fig = plt.figure(figsize=(14,8))
 
     if image is not None:
-        x, vals = get_raw_profile(image,frame,half_t_w)
+        vals = get_raw_profile(image,frame,half_t_w)
     elif vals is not None:
         x = np.arange(len(vals))
     else:

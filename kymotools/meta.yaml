@@ -6,8 +6,8 @@ package:
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/kymotools-{{ version }}.tar.gz
-  sha256: 4a2fc45ebae67712852b843c505c4df07df0c92a08f7a482ed79449e971c95be
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/kymotools-{{ version }}.tar.gz
+  sha256: fd4a94c4009f34ea9982b88213f71850ab2d423e949d587b792cf5f77014f12f
 
 build:
   noarch: python
@@ -36,7 +36,7 @@ test:
 
 about:
   summary: Scripts for kymograph processing
-  license: GPL-3.0
+  license: GPL-3.0-only
   license_file: LICENSE
 
 extra:
