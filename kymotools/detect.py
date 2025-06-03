@@ -32,7 +32,7 @@ class Detector():
 
         for frame in tqdm(range(image.shape[1])):
             vals = get_raw_profile(image,frame,self._half_t_w)
-            frame_peaks = self.fit_peaks(image,vals,frame)
+            frame_peaks, rmse = self.fit_peaks(vals,frame)
 
             # Determining the maximum peak ID and adding 1
             max_peak_id = 0
@@ -86,7 +86,7 @@ class Detector():
                 continue
 
         if len(scores) == 0:
-            return frame_peaks
+            return frame_peaks, -1
             
         idx = scores.index(min(scores))
         best_peaks = temp_peaks[idx]
@@ -305,3 +305,4 @@ def _ignore_missing_at_start(tracks, peaks, starting_window):
 
         # Removing this track
         del tracks[to_remove_id]    
+    
