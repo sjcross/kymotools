@@ -216,13 +216,15 @@ def save_plots(tracks, filepath):
 def plot_gauss_for_frame(peaks, frame, image=None, half_t_w=3, vals=None, xg=None, raw_style=None):
     fig = plt.figure(figsize=(14,8))
 
+    # If image was specified, overwrite vals
     if image is not None:
         vals = get_raw_profile(image,frame,half_t_w)
-    elif vals is not None:
-        x = np.arange(len(vals))
-    else:
+    
+    if vals is None:
         print("Please provide either an image or vals for plotting Gaussians")
         return
+    
+    x = np.arange(len(vals))
     
     match (raw_style):
         case None | "line":

@@ -1,6 +1,6 @@
 [project]
 name = "kymotools"
-version = "0.4.6"
+version = "0.4.7"
 authors = [
   { name="Stephen Cross", email="stephen.cross@bristol.ac.uk" },
 ]
