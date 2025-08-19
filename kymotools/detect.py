@@ -65,22 +65,24 @@ class Detector():
         
         x = np.arange(len(vals))
             
-        temp_peaks = []
+        popts = []
         scores = []
+        pcovs = []
         for n_peaks in range(self._n_max):        
             # Creating initial parameters for fitting
             fits = self._initialise_guesses(x,vals,n_peaks)
-
+            
             if fits is None:
                 break
 
             (p0,p_lb,p_ub) = fits            
 
             try:
-                popt = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))[0]
+                popt, pcov = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))
                 g = multi_gauss_1D(x,*popt)
-                temp_peaks.append(popt)
+                popts.append(popt)
                 scores.append(sum(abs(vals-g)))
+                pcovs.append(pcov)
                 
             except:
                 continue
@@ -89,15 +91,18 @@ class Detector():
             return frame_peaks, -1
             
         idx = scores.index(min(scores))
-        best_peaks = temp_peaks[idx]
+        popt = popts[idx]
+        pcov = pcovs[idx]
         
-        for i in range(0, len(best_peaks),3):
+        for i in range(0, len(popt),3):
             max_peak_id = 0
             if len(frame_peaks) != 0:
                 max_peak_id = max(frame_peaks.keys())
             peak_id = max_peak_id + 1
             
-            peak = Peak(peak_id, frame, best_peaks[i], best_peaks[i+1], best_peaks[i+2])
+            peak = Peak(peak_id, frame, popt[i], popt[i+1], popt[i+2])
+            perr = np.sqrt(np.diag(pcov))
+            peak.add_fit_errors(perr[i:i+3])
             frame_peaks[peak_id] = peak   
 
         fit_vals = multi_gauss_1D(x, *popt)
