@@ -1,5 +1,5 @@
 {% set name = "kymotools" %}
-{% set version = "0.4.6" %}
+{% set version = "0.4.9" %}
 
 package:
   name: {{ name|lower }}
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/kymotools-{{ version }}.tar.gz
-  sha256: fd4a94c4009f34ea9982b88213f71850ab2d423e949d587b792cf5f77014f12f
+  sha256: a7dc29e7fa64aedf1669ecfb6e9bd9b7696c96da4fa060b21f532dff923c1cf8
 
 build:
   noarch: python
