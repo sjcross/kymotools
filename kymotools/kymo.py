@@ -8,10 +8,10 @@ class PeakMeasures(Enum):
     ERROR_A = 'Error on a (amplitude)'
     ERROR_B = 'Error on b (position)'
     ERROR_C = 'Error on c (sigma)'
+    INST_D_COEFF = 'Instantaneous diffusion coefficient'
+    INST_MSD = 'Instantaneous MSD'
     NN_DIST = 'Nearest neighbour distance'
     NN_ID = 'Nearest neighbour ID'
-    INST_MSD = 'Instantaneous MSD'
-    INST_D_COEFF = 'Instantaneous diffusion coefficient'
 
 class TrackMeasures(Enum):
     MSD = 'MSD'
@@ -24,15 +24,12 @@ class Peak:
         self.b = b      # X-position
         self.c = c      # Sigma
         self.track = None # Assigned track
-        self.err_a = None # Amplitude error
-        self.err_b = None # Position error
-        self.err_c = None # Sigma error
         self.measures = {}
         
     def add_fit_errors(self, perr):
-        self.err_a = perr[0]
-        self.err_b = perr[1]
-        self.err_c = perr[2]
+        self.measures[PeakMeasures.ERROR_A] = perr[0]
+        self.measures[PeakMeasures.ERROR_B] = perr[1]
+        self.measures[PeakMeasures.ERROR_C] = perr[2]
 
     def calculate_nearest_neighbour(self, peaks, exclude_natching_ID=False):
         x_1 = self.b
