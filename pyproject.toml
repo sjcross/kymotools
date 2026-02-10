@@ -1,18 +1,16 @@
 [project]
 name = "kymotools"
-version = "0.4.10"
-authors = [
-  { name="Stephen Cross", email="stephen.cross@bristol.ac.uk" },
-]
+version = "0.4.11"
+authors = [{ name = "Stephen Cross", email = "stephen.cross@bristol.ac.uk" }]
 description = "Scripts for kymograph processing"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 requires-python = ">=3.8"
 dependencies = [
     "matplotlib>=3.0.0",
     "scipy>=1.0.0",
     "tifffile>=2021.1.8",
-    "tqdm>=4.1.0"
+    "tqdm>=4.1.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -27,5 +25,14 @@ Issues = "https://github.com/sjcross/kymotools/issues"
 Repository = "https://github.com/sjcross/kymotools.git"
 
 [build-system]
-requires = ["setuptools>=61.0",]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tool.pixi.pypi-dependencies]
+kymotools = { path = ".", editable = true }
+
+[tool.pixi.tasks]

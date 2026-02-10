@@ -1,3 +1,4 @@
+from re import U
 from scipy.optimize import curve_fit
 from scipy.optimize import linear_sum_assignment
 from kymotools.kymo import Peak
@@ -76,7 +77,11 @@ class Detector():
                 break
 
             (p0,p_lb,p_ub) = fits            
-
+            
+            # Ensuring initial guesses are within bounds
+            p0 = np.maximum(p0, p_lb)
+            p0 = np.minimum(p0, p_ub)
+            
             try:
                 popt, pcov = curve_fit(multi_gauss_1D, x, vals, p0, bounds=(p_lb, p_ub))
                 g = multi_gauss_1D(x,*popt)
@@ -84,7 +89,7 @@ class Detector():
                 scores.append(sum(abs(vals-g)))
                 pcovs.append(pcov)
                 
-            except:
+            except Exception as ex:
                 continue
 
         if len(scores) == 0:
