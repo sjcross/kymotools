@@ -1,4 +1,3 @@
-from re import U
 from scipy.optimize import curve_fit
 from scipy.optimize import linear_sum_assignment
 from kymotools.kymo import Peak

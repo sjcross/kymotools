@@ -149,8 +149,8 @@ packages:
   requires_python: '>=3.10'
 - pypi: ./
   name: kymotools
-  version: 0.4.10
-  sha256: 7fe1b5fb6e9f626a8903f17b955911f04f56b7ee406cac43e2de7bfee3aa123d
+  version: 0.4.11
+  sha256: dfe2d972651ebd813a84b335a7f221bf855aac4ce933aab73104aa3b67f093c0
   requires_dist:
   - matplotlib>=3.0.0
   - scipy>=1.0.0
